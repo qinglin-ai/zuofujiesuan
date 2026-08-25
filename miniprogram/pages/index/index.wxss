@@ -1,0 +1,22 @@
+.page {
+  padding: 60rpx 40rpx;
+}
+.header {
+  font-size: 40rpx;
+  font-weight: 600;
+  margin-bottom: 24rpx;
+}
+.status {
+  margin-bottom: 40rpx;
+  color: #555;
+}
+.nav button {
+  margin-bottom: 24rpx;
+}
+.result {
+  margin-top: 40rpx;
+  padding: 24rpx;
+  background: #f7f7f7;
+  border-radius: 12rpx;
+  color: #333;
+}

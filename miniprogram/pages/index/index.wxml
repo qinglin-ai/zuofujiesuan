@@ -1,0 +1,16 @@
+<view class="page">
+  <view class="header">左辅云创 · 兼职小程序</view>
+  <view class="status" wx:if="{{logged}}">已登录</view>
+  <view class="status" wx:else>未登录</view>
+
+  <view class="nav">
+    <button wx:if="{{!logged}}" bindtap="goLogin">去登录</button>
+    <button wx:else bindtap="onLogout">退出登录</button>
+    <button bindtap="onHealth">后端连通性检查</button>
+  </view>
+
+  <view class="result" wx:if="{{ping}}">
+    <view>ping: {{ping.status}}</view>
+    <view>db: {{dbOk ? 'ok' : 'fail'}}</view>
+  </view>
+</view>

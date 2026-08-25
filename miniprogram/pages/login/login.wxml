@@ -1,0 +1,8 @@
+<view class="page">
+  <view class="brand">
+    <text class="brand-title">左辅云创</text>
+    <text class="brand-sub">兼职人员管理平台</text>
+  </view>
+  <button class="login-btn" bindtap="onLogin" loading="{{loading}}">微信一键登录</button>
+  <view class="tip" wx:if="{{error}}">{{error}}</view>
+</view>
