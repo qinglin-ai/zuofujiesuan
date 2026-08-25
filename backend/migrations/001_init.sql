@@ -1,5 +1,9 @@
 -- 左辅云创 · 兼职人员管理 初始建表脚本（对应《数据库结构说明.md》）
--- 数据库：MySQL 8.0+，utf8mb4；预先创建库：CREATE DATABASE IF NOT EXISTS zuofu_parttime DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- 数据库：MySQL 8.0+，utf8mb4
+-- 说明：docker-compose 启动时由 MYSQL_DATABASE 自动建库；本脚本开头 USE 确保写入目标库。
+-- 手动执行时需先建库：CREATE DATABASE IF NOT EXISTS zuofu_parttime DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+USE zuofu_parttime;
 
 -- 1. users 用户表
 CREATE TABLE IF NOT EXISTS users (

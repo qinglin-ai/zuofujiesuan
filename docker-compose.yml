@@ -1,0 +1,51 @@
+# 前后端分离部署编排：MySQL + 后端服务
+# 启动时 MySQL 首次将以空数据卷初始化，自动创建 zuofu_parttime 库并执行 migrations/*.sql 建表脚本。
+# 用法：docker compose up -d --build   （环境变量来自根目录 .env，参考 .env.example）
+# 首次启动若需重置数据库，可删除 mysql_data 卷后重启（仅测试环境）。
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: zuofu_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: zuofu_parttime
+      MYSQL_USER: zuofu_app
+      MYSQL_PASSWORD: ${MYSQL_APP_PASSWORD}
+      TZ: Asia/Shanghai
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+    volumes:
+      - mysql_data:/var/lib/mysql
+      # 首启自动执行建表脚本（含全部唯一约束/索引）
+      - ./backend/migrations:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  backend:
+    build: ./backend
+    container_name: zuofu_backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      FLASK_ENV: production
+      FLASK_DEBUG: "0"
+      # 与上方 mysql 服务的库名/账号一致
+      DB_URI: mysql+pymysql://zuofu_app:${MYSQL_APP_PASSWORD}@mysql:3306/zuofu_parttime?charset=utf8mb4
+      JWT_SECRET: ${JWT_SECRET}
+      WX_APPID: ${WX_APPID}
+      WX_SECRET: ${WX_SECRET}
+    ports:
+      - "5000:5000"
+
+volumes:
+  mysql_data:
