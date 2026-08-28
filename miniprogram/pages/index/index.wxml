@@ -1,20 +1,19 @@
 <view class="page">
   <view class="header">左辅云创 · 兼职小程序</view>
-  <view class="status" wx:if="{{logged}}">已登录</view>
-  <view class="status" wx:else>未登录</view>
 
-  <view class="nav">
-    <button wx:if="{{!logged}}" bindtap="goLogin">去登录</button>
-    <button wx:else bindtap="onLogout">退出登录</button>
-    <button bindtap="onHealth">后端连通性检查</button>
-    <button wx:if="{{logged}}" bindtap="goTasks">任务列表</button>
-    <button wx:if="{{logged}}" bindtap="goMine">我的作业</button>
-    <button wx:if="{{logged}}" bindtap="goWallet">我的资金</button>
-    <button wx:if="{{logged}}" bindtap="goNotices">公告 / 动态</button>
+  <view class="profile">
+    <view class="status {{logged ? 'on' : ''}}">{{logged ? '已登录' : '未登录'}}</view>
+    <button wx:if="{{!logged}}" class="main-btn" bindtap="goLogin">去登录</button>
+    <button wx:else class="main-btn plain" bindtap="onLogout">退出登录</button>
   </view>
 
-  <view class="result" wx:if="{{ping}}">
-    <view>ping: {{ping.status}}</view>
-    <view>db: {{dbOk ? 'ok' : 'fail'}}</view>
+  <!-- 开发环境诊断：仅开发版显示，正式版不展示 -->
+  <view class="dev" wx:if="{{devMode}}">
+    <view class="dev-title">开发环境诊断</view>
+    <button size="mini" bindtap="onHealth">后端连通性检查</button>
+    <view class="result" wx:if="{{ping}}">
+      <view>ping: {{ping.code}} {{ping.message}}</view>
+      <view>db: {{dbOk ? 'ok' : 'fail'}}</view>
+    </view>
   </view>
 </view>

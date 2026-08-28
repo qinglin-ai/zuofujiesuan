@@ -1,12 +1,27 @@
 const request = require('../../utils/request')
 const tokenManager = require('../../utils/token')
 
+// 开发环境判定：仅开发版展示连通性诊断，试用/正式版不展示
+function isDevBuild() {
+  try {
+    const info = wx.getAccountInfoSync()
+    return info && info.miniProgram && info.miniProgram.envVersion === 'develop'
+  } catch (e) {
+    return true
+  }
+}
+
 Page({
   data: {
     logged: false,
     user: null,
     ping: null,
-    dbOk: null
+    dbOk: null,
+    devMode: false
+  },
+
+  onLoad() {
+    this.setData({ devMode: isDevBuild() })
   },
 
   onShow() {
@@ -40,21 +55,5 @@ Page({
 
   goLogin() {
     wx.navigateTo({ url: '/pages/login/login' })
-  },
-
-  goTasks() {
-    wx.navigateTo({ url: '/pages/tasks/tasks' })
-  },
-
-  goMine() {
-    wx.navigateTo({ url: '/pages/my-tasks/my-tasks' })
-  },
-
-  goWallet() {
-    wx.navigateTo({ url: '/pages/wallet/wallet' })
-  },
-
-  goNotices() {
-    wx.navigateTo({ url: '/pages/notices/notices' })
   }
 })

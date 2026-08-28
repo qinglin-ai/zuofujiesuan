@@ -14,6 +14,19 @@
     "navigationBarTitleText": "左辅云创",
     "navigationBarTextStyle": "black"
   },
+  "tabBar": {
+    "color": "#999999",
+    "selectedColor": "#1989fa",
+    "backgroundColor": "#ffffff",
+    "borderStyle": "black",
+    "list": [
+      { "pagePath": "pages/notices/notices", "text": "公告" },
+      { "pagePath": "pages/tasks/tasks", "text": "任务列表" },
+      { "pagePath": "pages/my-tasks/my-tasks", "text": "我的作业" },
+      { "pagePath": "pages/wallet/wallet", "text": "我的资金" },
+      { "pagePath": "pages/index/index", "text": "用户" }
+    ]
+  },
   "style": "v2",
   "sitemapLocation": "sitemap.json",
   "lazyCodeLoading": "requiredComponents"

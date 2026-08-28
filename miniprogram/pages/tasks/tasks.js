@@ -51,7 +51,7 @@ Page({
   },
 
   goMine() {
-    wx.navigateTo({ url: '/pages/my-tasks/my-tasks' })
+    wx.switchTab({ url: '/pages/my-tasks/my-tasks' })
   },
 
   async onClaim(e) {
