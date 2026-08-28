@@ -51,7 +51,8 @@
 ```
 ┌──────────────────────────┐
 │ 标题    难度·标注类型      │
-│ 单价 ￥xx/作业  剩余名额 n/total │
+│ 任务描述 description       │
+│ 单价 ￥xx/件  剩余名额 n/total │
 │ 单人任务量 quantity · 截止 deadline │
 │ 领取条件：需等级 requireLevel      │
 │ 样例图 sampleUrl                  │

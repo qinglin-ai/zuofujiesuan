@@ -1,5 +1,7 @@
 """注册/登录鉴权接口。(注册审批完整逻辑在阶段三实现，此处仅打通登录链路)"""
 from flask import Blueprint, request
+from sqlalchemy import or_
+from werkzeug.security import check_password_hash
 
 from ..auth import create_token, login_required, wechat_code_to_openid
 from ..extensions import db
@@ -51,6 +53,50 @@ def login():
                 "role": user.role,
                 "approval_status": user.approval_status,
                 "status": user.status,
+                "nickname": user.nickname,
+            },
+        },
+    }
+
+
+@bp.post("/admin/login")
+def admin_login():
+    """管理后台：admin 账号密码登录（T5-1），签发放大角色 JWT。
+
+    body: { account: 手机号|真实姓名|openid, password }
+    仅 role=admin 且密码匹配、账号正常时放行。
+    """
+    body = request.get_json(silent=True) or {}
+    account = (body.get("account") or "").strip()
+    password = body.get("password") or ""
+    if not account or not password:
+        return {"code": 400, "message": "账号与密码必填"}, 400
+    user = db.session.execute(
+        db.select(User).where(
+            or_(
+                User.phone == account,
+                User.real_name == account,
+                User.openid == account,
+            )
+        )
+    ).scalar_one_or_none()
+    if not user:
+        return {"code": 401, "message": "账号或密码错误"}, 401
+    if user.role != "admin":
+        return {"code": 403, "message": "非管理员账号"}, 403
+    if not user.password_hash or not check_password_hash(user.password_hash, password):
+        return {"code": 401, "message": "账号或密码错误"}, 401
+    if user.status != "active":
+        return {"code": 403, "message": "账号已封禁"}, 403
+    token = create_token(user.openid, "admin")
+    return {
+        "code": 0,
+        "message": "ok",
+        "data": {
+            "token": token,
+            "user": {
+                "openid": user.openid,
+                "role": "admin",
                 "nickname": user.nickname,
             },
         },

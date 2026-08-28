@@ -1,0 +1,22 @@
+<view class="page">
+  <view class="tabs">
+    <view class="tab {{activeTab === item.key ? 'active' : ''}}" wx:for="{{tabs}}" wx:key="key" bindtap="switchTab" data-key="{{item.key}}">{{item.label}}</view>
+  </view>
+
+  <view wx:if="{{loading}}" class="empty">加载中...</view>
+  <view wx:elif="{{error}}" class="empty">{{error}}</view>
+  <view wx:elif="{{!filtered.length}}" class="empty">暂无作业</view>
+
+  <view class="card" wx:for="{{filtered}}" wx:key="id" wx:for-item="a">
+    <view class="card-head">
+      <view class="card-title" bindtap="goDetail" data-task-id="{{a.task_id}}">{{a.task_name}}</view>
+      <view class="status-badge st-{{a.status}}">{{a.status_text}}</view>
+    </view>
+    <view class="card-meta" wx:if="{{a.unit_price}}">单价 ￥{{a.unit_price}}/件</view>
+    <view class="card-meta" wx:if="{{a.submit_time}}">提交时间 {{a.submit_time}}</view>
+    <view class="card-ops" wx:if="{{a.status === 'claimed'}}">
+      <button size="mini" type="primary" bindtap="onSubmit" data-task-id="{{a.task_id}}" data-assignment-id="{{a.id}}">提交作业</button>
+    </view>
+    <view class="card-tip" wx:elif="{{a.status === 'submitted'}}">已提交，等待核验（或到外部系统完成作业）</view>
+  </view>
+</view>

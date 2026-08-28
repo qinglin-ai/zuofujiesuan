@@ -40,5 +40,21 @@ Page({
 
   goLogin() {
     wx.navigateTo({ url: '/pages/login/login' })
+  },
+
+  goTasks() {
+    wx.navigateTo({ url: '/pages/tasks/tasks' })
+  },
+
+  goMine() {
+    wx.navigateTo({ url: '/pages/my-tasks/my-tasks' })
+  },
+
+  goWallet() {
+    wx.navigateTo({ url: '/pages/wallet/wallet' })
+  },
+
+  goNotices() {
+    wx.navigateTo({ url: '/pages/notices/notices' })
   }
 })

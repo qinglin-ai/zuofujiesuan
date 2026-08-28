@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>左辅云创 · 管理后台</title>
+  <link rel="stylesheet" href="/static/admin/css/admin.css">
+</head>
+<body>
+  <!-- 登录视图 -->
+  <div id="login-view" class="login-view">
+    <form id="login-form" class="login-card">
+      <h1>左辅云创 · 管理后台</h1>
+      <input id="login-account" placeholder="管理员账号" autocomplete="username">
+      <input id="login-password" type="password" placeholder="密码" autocomplete="current-password">
+      <button type="submit">登 录</button>
+      <p id="login-error" class="error hidden"></p>
+      <p class="hint">
+        提示：先用小程序登录建档，再执行
+        <code>python -m flask seed-admin</code> 设置管理员账号密码。
+      </p>
+    </form>
+  </div>
+
+  <!-- 主面板 -->
+  <div id="app-view" class="app-view hidden">
+    <aside class="sidebar">
+      <div class="brand">左辅云创</div>
+      <nav>
+        <a data-page="users" class="active">用户 / 审批</a>
+        <a data-page="quality">核验管理</a>
+        <a data-page="certifications">能力认证</a>
+        <a data-page="violations">违规管理</a>
+        <a data-page="notices">公告管理</a>
+        <a data-page="withdrawals">提现确认</a>
+        <a data-page="ledger">台账 / 对账</a>
+      </nav>
+      <div class="sidebar-foot">
+        <span id="admin-name"></span>
+        <button id="logout-btn" class="link-btn">退出</button>
+      </div>
+    </aside>
+    <main id="page-content" class="page-content"></main>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="/static/admin/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<view class="page" wx:if="{{task}}">
+  <view class="head">
+    <view class="head-title">{{task.title}}</view>
+    <view class="head-tags">
+      <text class="tag" wx:if="{{task.difficulty_text}}">★{{task.difficulty_text}}</text>
+      <text class="tag">{{task.annot_text}}</text>
+    </view>
+  </view>
+
+  <view class="block">
+    <view class="row"><text class="label">任务描述</text><text class="value">{{task.description || '暂无'}}</text></view>
+    <view class="row"><text class="label">单价</text><text class="value">￥{{task.unit_price}}/件</text></view>
+    <view class="row"><text class="label">剩余名额</text><text class="value">{{task.remain}}/{{task.total_people}}</text></view>
+    <view class="row"><text class="label">单人任务量</text><text class="value">{{task.quantity}}</text></view>
+    <view class="row"><text class="label">截止时间</text><text class="value">{{task.deadline || '长期'}}</text></view>
+    <view class="row" wx:if="{{task.require_level}}"><text class="label">领取条件</text><text class="value">需 {{task.require_level_text}} 等级</text></view>
+    <view class="row" wx:if="{{task.sample_url}}"><text class="label">样例图</text><text class="value">{{task.sample_url}}</text></view>
+    <view class="row" wx:if="{{task.forbidden_text}}"><text class="label">禁用项</text><text class="value">{{task.forbidden_text}}</text></view>
+  </view>
+
+  <view class="cert" wx:if="{{task.my_cert}}">
+    我的认证：{{task.my_cert.exam_passed ? '已通过' : '未通过'}}<text wx:if="{{task.cert_level_text}}"> · {{task.cert_level_text}}</text>
+  </view>
+
+  <button class="claim-btn" type="primary" wx:if="{{task.can_claim}}" bindtap="onClaim">领取任务</button>
+  <view class="claim-state" wx:elif="{{task.my_status}}">已{{task.my_status === 'claimed' ? '领取，请到"我的作业"提交' : (task.my_status === 'submitted' ? '提交，等待核验' : (task.my_status === 'passed' ? '通过' : '未通过'))}}</view>
+  <view class="claim-state" wx:else>任务已满员或已关闭</view>
+
+  <view class="empty" wx:if="{{loading}}">加载中...</view>
+  <view class="empty" wx:elif="{{error}}">{{error}}</view>
+</view>

@@ -1,0 +1,78 @@
+.page {
+  padding: 24rpx;
+  min-height: 100vh;
+  background: #f5f6f8;
+}
+.empty {
+  text-align: center;
+  color: #999;
+  padding: 80rpx 0;
+}
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  background: #fff;
+  border-radius: 12rpx;
+  padding: 8rpx;
+  margin-bottom: 20rpx;
+}
+.tab {
+  flex: 1;
+  min-width: calc(100% / 5);
+  text-align: center;
+  font-size: 26rpx;
+  color: #666;
+  padding: 12rpx 0;
+  border-radius: 8rpx;
+  white-space: nowrap;
+}
+.tab.active {
+  color: #1989fa;
+  background: #e8f3ff;
+  font-weight: 600;
+}
+.card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+}
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+.tag {
+  font-size: 22rpx;
+  padding: 4rpx 14rpx;
+  border-radius: 8rpx;
+  color: #1a7f37;
+  background: #e6f4ea;
+}
+.tag-flow {
+  color: #2f6fed;
+  background: #e8f3ff;
+}
+.tag-project {
+  color: #8a2be2;
+  background: #f3e9ff;
+}
+.tag-faq {
+  color: #b06000;
+  background: #fef7e0;
+}
+.date {
+  font-size: 24rpx;
+  color: #999;
+}
+.card-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  margin-bottom: 10rpx;
+}
+.card-content {
+  font-size: 26rpx;
+  color: #555;
+  line-height: 1.6;
+}

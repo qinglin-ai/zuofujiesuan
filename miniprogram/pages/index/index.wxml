@@ -7,6 +7,10 @@
     <button wx:if="{{!logged}}" bindtap="goLogin">去登录</button>
     <button wx:else bindtap="onLogout">退出登录</button>
     <button bindtap="onHealth">后端连通性检查</button>
+    <button wx:if="{{logged}}" bindtap="goTasks">任务列表</button>
+    <button wx:if="{{logged}}" bindtap="goMine">我的作业</button>
+    <button wx:if="{{logged}}" bindtap="goWallet">我的资金</button>
+    <button wx:if="{{logged}}" bindtap="goNotices">公告 / 动态</button>
   </view>
 
   <view class="result" wx:if="{{ping}}">

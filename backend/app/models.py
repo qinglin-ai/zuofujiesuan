@@ -31,6 +31,7 @@ class User(TimestampMixin, db.Model):
     status = db.Column(db.Enum("active", "blocked"), nullable=False, default="active")
     bank_info = db.Column(db.JSON)  # {bankName, cardNo, cardHolder}
     inviter_openid = db.Column(db.String(64))
+    password_hash = db.Column(db.String(255))  # admin 账号密码哈希(登录用)
 
 
 class Balance(db.Model):
@@ -74,13 +75,14 @@ class Task(db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     title = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)  # 任务描述（详情说明，可选）
     annot_type = db.Column(
         db.Enum("shadow", "light_source", "reflection", "exposure", "filter")
     )
     quantity = db.Column(db.Integer, nullable=False)
     claimed_count = db.Column(db.Integer, nullable=False, default=0)
     total_people = db.Column(db.Integer, nullable=False)
-    unit_price = db.Column(db.Numeric(10, 2), nullable=False)  # 单个作业佣金
+    unit_price = db.Column(db.Numeric(10, 2), nullable=False)  # 单价（每件作业价格；本周期佣金 = 提交数量 × 单价）
     difficulty = db.Column(db.Enum("junior", "middle", "senior"))
     require_level = db.Column(db.Enum("junior", "middle", "senior"))
     deadline = db.Column(db.DateTime)
@@ -144,7 +146,7 @@ class Commission(db.Model):
     openid = db.Column(db.String(64), nullable=False)
     task_id = db.Column(db.Integer, nullable=False)
     assignment_id = db.Column(db.Integer, nullable=False)
-    amount = db.Column(db.Numeric(10, 2), nullable=False)  # = 来源任务单价
+    amount = db.Column(db.Numeric(10, 2), nullable=False)  # = 提交数量 × 单价（本周期佣金）
     settle_date = db.Column(db.Date, nullable=False)
     create_time = db.Column(db.DateTime, default=datetime.utcnow)
 

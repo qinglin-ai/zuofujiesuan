@@ -1,0 +1,66 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="empty">加载中...</view>
+  <view wx:elif="{{error}}" class="empty">{{error}}</view>
+
+  <block wx:else>
+    <!-- 资金概览 -->
+    <view class="balance-card">
+      <view class="balance-label">可提现余额（元）</view>
+      <view class="balance-amount">{{info.available_balance}}</view>
+      <view class="balance-sub">
+        <view>累计入账 ￥{{info.total_income}}</view>
+        <view>累计已提 ￥{{info.total_withdrawn}}</view>
+      </view>
+    </view>
+
+    <!-- 提现申请 -->
+    <view class="card">
+      <view class="card-title">申请提现</view>
+      <view wx:if="{{!info.has_bank}}" class="bank-form">
+        <view class="form-tip">提现前请先绑定收款银行卡</view>
+        <input class="ipt" placeholder="开户行" value="{{bank.bankName}}" bindinput="onBankInput" data-key="bankName" />
+        <input class="ipt" placeholder="银行卡号" value="{{bank.cardNo}}" bindinput="onBankInput" data-key="cardNo" />
+        <input class="ipt" placeholder="持卡人姓名" value="{{bank.cardHolder}}" bindinput="onBankInput" data-key="cardHolder" />
+        <button type="primary" size="mini" bindtap="onBindBank">绑定银行卡</button>
+      </view>
+      <view wx:else class="withdraw-form">
+        <view class="bank-info">{{info.bank_tail}}</view>
+        <view class="withdraw-row">
+          <text class="currency">￥</text>
+          <input class="amount-ipt" type="digit" placeholder="请输入提现金额" value="{{withdrawAmount}}" bindinput="onAmountInput" />
+          <button type="primary" size="mini" bindtap="onWithdraw" disabled="{{!canWithdraw}}">提现</button>
+        </view>
+        <view class="form-tip">提现免审核，申请成功后扣减可提现余额，到账由系统回写</view>
+      </view>
+    </view>
+
+    <!-- 明细标签 -->
+    <view class="tabs">
+      <view class="tab {{activeTab === 'commission' ? 'active' : ''}}" bindtap="switchTab" data-key="commission">佣金明细</view>
+      <view class="tab {{activeTab === 'withdrawal' ? 'active' : ''}}" bindtap="switchTab" data-key="withdrawal">提现记录</view>
+    </view>
+
+    <view wx:if="{{activeTab === 'commission'}}">
+      <view wx:if="{{!commissions.length}}" class="empty">暂无佣金流水</view>
+      <view class="card row" wx:for="{{commissions}}" wx:key="id">
+        <view class="row-main">
+          <view class="row-title">任务 #{{item.task_id}} · 作业 #{{item.assignment_id}}</view>
+          <view class="row-sub">{{item.settle_date}}</view>
+        </view>
+        <view class="row-amount">+￥{{item.amount}}</view>
+      </view>
+    </view>
+
+    <view wx:else>
+      <view wx:if="{{!withdrawals.length}}" class="empty">暂无提现记录</view>
+      <view class="card row" wx:for="{{withdrawals}}" wx:key="id">
+        <view class="row-main">
+          <view class="row-title">提现申请 · ￥{{item.amount}}</view>
+          <view class="row-sub">{{item.apply_time}}</view>
+          <view class="status st-{{item.status}}">{{item.status_text}}</view>
+        </view>
+        <view class="row-sub" wx:if="{{item.paid_time}}">到账 {{item.paid_time}}</view>
+      </view>
+    </view>
+  </block>
+</view>

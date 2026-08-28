@@ -9,6 +9,9 @@ venv/
 .env
 *.env
 
+# 小程序私有配置（个人开发机专属，不入库）
+miniprogram/project.private.config.json
+
 # Logs
 logs/
 *.log

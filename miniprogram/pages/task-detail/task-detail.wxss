@@ -1,0 +1,73 @@
+.page {
+  padding: 24rpx;
+  min-height: 100vh;
+  background: #f5f6f8;
+}
+.head {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 28rpx;
+  margin-bottom: 20rpx;
+}
+.head-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  margin-bottom: 12rpx;
+}
+.head-tags {
+  display: flex;
+  gap: 12rpx;
+}
+.tag {
+  font-size: 22rpx;
+  color: #fa8c16;
+  background: #fff7e6;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+}
+.block {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 12rpx 28rpx;
+  margin-bottom: 20rpx;
+}
+.row {
+  display: flex;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+.row:last-child {
+  border-bottom: none;
+}
+.label {
+  width: 180rpx;
+  color: #999;
+  font-size: 28rpx;
+}
+.value {
+  flex: 1;
+  color: #333;
+  font-size: 28rpx;
+}
+.cert {
+  background: #f0f9ff;
+  color: #1890ff;
+  font-size: 26rpx;
+  border-radius: 12rpx;
+  padding: 16rpx 24rpx;
+  margin-bottom: 20rpx;
+}
+.claim-btn {
+  margin-top: 10rpx;
+}
+.claim-state {
+  text-align: center;
+  color: #999;
+  font-size: 28rpx;
+  padding: 20rpx 0;
+}
+.empty {
+  text-align: center;
+  color: #999;
+  padding: 60rpx 0;
+}

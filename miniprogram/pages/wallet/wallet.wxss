@@ -1,0 +1,139 @@
+.page {
+  padding: 24rpx;
+  min-height: 100vh;
+  background: #f5f6f8;
+}
+.empty {
+  text-align: center;
+  color: #999;
+  padding: 80rpx 0;
+}
+.balance-card {
+  background: linear-gradient(135deg, #2f6fed, #5a8cff);
+  border-radius: 16rpx;
+  padding: 32rpx;
+  color: #fff;
+  margin-bottom: 20rpx;
+}
+.balance-label {
+  font-size: 26rpx;
+  opacity: .9;
+}
+.balance-amount {
+  font-size: 64rpx;
+  font-weight: 700;
+  margin: 12rpx 0 20rpx;
+}
+.balance-sub {
+  display: flex;
+  justify-content: space-between;
+  font-size: 24rpx;
+  opacity: .9;
+}
+.card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+}
+.card-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  margin-bottom: 16rpx;
+}
+.form-tip {
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 12rpx;
+}
+.ipt {
+  border: 1rpx solid #e5e6eb;
+  border-radius: 8rpx;
+  padding: 16rpx 20rpx;
+  font-size: 28rpx;
+  margin-bottom: 16rpx;
+}
+.bank-form button {
+  margin-top: 8rpx;
+  width: 200rpx;
+}
+.bank-info {
+  font-size: 26rpx;
+  color: #333;
+  margin-bottom: 20rpx;
+}
+.withdraw-row {
+  display: flex;
+  align-items: center;
+}
+.currency {
+  font-size: 40rpx;
+  color: #333;
+  margin-right: 8rpx;
+}
+.amount-ipt {
+  flex: 1;
+  border: 1rpx solid #e5e6eb;
+  border-radius: 8rpx;
+  padding: 16rpx 20rpx;
+  font-size: 34rpx;
+  margin-right: 16rpx;
+}
+.tabs {
+  display: flex;
+  background: #fff;
+  border-radius: 12rpx;
+  padding: 8rpx;
+  margin-bottom: 20rpx;
+}
+.tab {
+  flex: 1;
+  text-align: center;
+  font-size: 26rpx;
+  color: #666;
+  padding: 12rpx 0;
+  border-radius: 8rpx;
+}
+.tab.active {
+  color: #1989fa;
+  background: #e8f3ff;
+  font-weight: 600;
+}
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.row-title {
+  font-size: 28rpx;
+  font-weight: 500;
+}
+.row-sub {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 6rpx;
+}
+.row-amount {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1a7f37;
+}
+.status {
+  display: inline-block;
+  font-size: 22rpx;
+  padding: 4rpx 14rpx;
+  border-radius: 8rpx;
+  margin-top: 10rpx;
+}
+.st-pending {
+  color: #b06000;
+  background: #fef7e0;
+}
+.st-paid {
+  color: #1a7f37;
+  background: #e6f4ea;
+}
+.st-rejected {
+  color: #c5221f;
+  background: #fce8e6;
+}

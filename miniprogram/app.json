@@ -1,7 +1,12 @@
 {
   "pages": [
     "pages/index/index",
-    "pages/login/login"
+    "pages/login/login",
+    "pages/tasks/tasks",
+    "pages/task-detail/task-detail",
+    "pages/my-tasks/my-tasks",
+    "pages/wallet/wallet",
+    "pages/notices/notices"
   ],
   "window": {
     "backgroundTextStyle": "light",

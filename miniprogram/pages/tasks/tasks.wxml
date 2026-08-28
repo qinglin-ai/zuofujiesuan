@@ -1,0 +1,25 @@
+<view class="page">
+  <view class="topbar">
+    <view class="title">任务列表</view>
+    <view class="mine-link" bindtap="goMine">我的作业</view>
+  </view>
+
+  <view wx:if="{{loading}}" class="empty">加载中...</view>
+  <view wx:elif="{{error}}" class="empty">{{error}}</view>
+  <view wx:elif="{{!tasks.length}}" class="empty">暂无任务</view>
+
+  <view class="card" wx:for="{{tasks}}" wx:key="id" wx:for-item="t">
+    <view class="card-head">
+      <view class="card-title">{{t.title}}</view>
+      <view class="badge" wx:if="{{t.difficulty_text}}">★{{t.difficulty_text}}</view>
+    </view>
+    <view class="card-meta">{{t.annot_text}} · 单价￥{{t.unit_price}}/件</view>
+    <view class="card-meta">剩余名额 {{t.remain}}/{{t.total_people}} · 单人量 {{t.quantity}}</view>
+    <view class="card-ops">
+      <button size="mini" bindtap="goDetail" data-id="{{t.id}}">详情</button>
+      <button size="mini" type="primary" wx:if="{{t.can_claim}}" bindtap="onClaim" data-id="{{t.id}}">领取</button>
+      <view class="my-status" wx:elif="{{t.my_status}}">{{t.my_status === 'claimed' ? '已领取' : (t.my_status === 'submitted' ? '已提交' : (t.my_status === 'passed' ? '已通过' : '未通过'))}}</view>
+      <view class="my-status" wx:else>已满员/关闭</view>
+    </view>
+  </view>
+</view>

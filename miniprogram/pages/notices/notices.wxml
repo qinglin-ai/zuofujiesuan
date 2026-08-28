@@ -1,0 +1,25 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="empty">加载中...</view>
+  <view wx:elif="{{error}}" class="empty">{{error}}</view>
+
+  <block wx:else>
+    <!-- 分类标签 -->
+    <view class="tabs">
+      <view class="tab {{activeType === '' ? 'active' : ''}}" bindtap="switchType" data-type="">全部</view>
+      <view class="tab {{activeType === 'notice' ? 'active' : ''}}" bindtap="switchType" data-type="notice">公告</view>
+      <view class="tab {{activeType === 'flow' ? 'active' : ''}}" bindtap="switchType" data-type="flow">流程</view>
+      <view class="tab {{activeType === 'project' ? 'active' : ''}}" bindtap="switchType" data-type="project">项目动态</view>
+      <view class="tab {{activeType === 'faq' ? 'active' : ''}}" bindtap="switchType" data-type="faq">FAQ</view>
+    </view>
+
+    <view wx:if="{{!filtered.length}}" class="empty">暂无公告</view>
+    <view class="card" wx:for="{{filtered}}" wx:key="id" bindtap="onOpen">
+      <view class="card-head">
+        <text class="tag tag-{{item.type}}">{{item.type_label}}</text>
+        <text class="date">{{item.create_time_short}}</text>
+      </view>
+      <view class="card-title">{{item.title}}</view>
+      <view class="card-content">{{item.content}}</view>
+    </view>
+  </block>
+</view>

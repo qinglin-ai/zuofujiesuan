@@ -1,0 +1,80 @@
+.page {
+  padding: 24rpx;
+  min-height: 100vh;
+  background: #f5f6f8;
+}
+.tabs {
+  display: flex;
+  background: #fff;
+  border-radius: 12rpx;
+  padding: 8rpx;
+  margin-bottom: 20rpx;
+}
+.tab {
+  flex: 1;
+  text-align: center;
+  font-size: 26rpx;
+  color: #666;
+  padding: 12rpx 0;
+  border-radius: 8rpx;
+}
+.tab.active {
+  color: #1989fa;
+  background: #e8f3ff;
+  font-weight: 600;
+}
+.empty {
+  text-align: center;
+  color: #999;
+  padding: 80rpx 0;
+}
+.card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+}
+.card-head {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+.card-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  flex: 1;
+}
+.status-badge {
+  font-size: 22rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+}
+.st-claimed {
+  color: #1890ff;
+  background: #e6f7ff;
+}
+.st-submitted {
+  color: #fa8c16;
+  background: #fff7e6;
+}
+.st-passed {
+  color: #52c41a;
+  background: #f6ffed;
+}
+.st-rejected {
+  color: #ff4d4f;
+  background: #fff1f0;
+}
+.card-meta {
+  font-size: 26rpx;
+  color: #666;
+  margin-bottom: 6rpx;
+}
+.card-ops {
+  margin-top: 16rpx;
+}
+.card-tip {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 12rpx;
+}
