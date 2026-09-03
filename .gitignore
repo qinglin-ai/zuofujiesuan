@@ -19,8 +19,13 @@ logs/
 # IDE / OS
 .idea/
 .vscode/
+.trae/
 .DS_Store
 Thumbs.db
 
 # 小程序编译产物
 miniprogram/**/node_modules/
+
+# 微信支付证书/私钥（敏感，不入库；仅保留目录占位）
+backend/certs/*
+!backend/certs/.gitkeep

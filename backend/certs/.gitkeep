@@ -1,0 +1,4 @@
+# 此目录存放微信支付证书/私钥（不入库）：
+# - apiclient_key.pem  商户API私钥
+# - pub_key.pem        微信支付公钥
+# 路径通过环境变量 WXPAY_MCH_PRIVATE_KEY_PATH / WXPAY_PLATFORM_PUBLIC_KEY_PATH 指定

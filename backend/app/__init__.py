@@ -33,6 +33,7 @@ def create_app(config_object=None):
     from .api.violations import bp as violations_bp
     from .api.notices import bp as notices_bp
     from .api.wallet import bp as wallet_bp
+    from .api.notify import bp as notify_bp
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(health_bp, url_prefix="/api/health")
     app.register_blueprint(users_bp, url_prefix="/api/users")
@@ -42,6 +43,7 @@ def create_app(config_object=None):
     app.register_blueprint(violations_bp, url_prefix="/api/violations")
     app.register_blueprint(notices_bp, url_prefix="/api/notices")
     app.register_blueprint(wallet_bp, url_prefix="/api/wallet")
+    app.register_blueprint(notify_bp)
 
     # 管理后台 H5 入口（阶段五）
     @app.get("/admin")

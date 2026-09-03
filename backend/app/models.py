@@ -152,7 +152,7 @@ class Commission(db.Model):
 
 
 class Withdrawal(db.Model):
-    """withdrawals 提现表（免审核）。"""
+    """withdrawals 提现表（免审核；申请即自动微信转账打款）。"""
     __tablename__ = "withdrawals"
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -160,8 +160,14 @@ class Withdrawal(db.Model):
     amount = db.Column(db.Numeric(10, 2), nullable=False)
     bank_account = db.Column(db.JSON)  # {bankName, cardNo, cardHolder}
     status = db.Column(db.Enum("pending", "paid", "rejected"), nullable=False, default="pending")
-    pay_ref_no = db.Column(db.String(64))
+    pay_ref_no = db.Column(db.String(64))  # auto 时冗余写 out_bill_no，manual 时财务填写
     paid_source = db.Column(db.Enum("auto", "manual"))
+    out_bill_no = db.Column(db.String(64), unique=True)  # 商户转账单号（自动打款，商户内唯一）
+    transfer_bill_no = db.Column(db.String(64))  # 微信转账单号（最新一次）
+    transfer_status = db.Column(db.String(20))  # 微信侧单据状态镜像
+    transfer_time = db.Column(db.DateTime)  # 转账终态时间（SUCCESS/FAIL 时写）
+    fail_reason = db.Column(db.String(255))  # 最终失败原因
+    retry_count = db.Column(db.Integer, nullable=False, default=0)  # 因 FAIL 换单重试次数
     apply_time = db.Column(db.DateTime, default=datetime.utcnow)
     paid_time = db.Column(db.DateTime)
 

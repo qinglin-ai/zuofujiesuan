@@ -337,14 +337,28 @@ async function doNewNotice() {
   toast('已发布'); renderNotices()
 }
 
-/* ---------------- 提现确认（T4-3 半自动回写） ---------------- */
+/* ---------------- 提现确认（T4-3 半自动回写 + 微信自动打款 T4-6） ---------------- */
 const WD_STATUS_LABEL = { pending: '提现中', paid: '已到账', rejected: '已拒绝' }
+const WD_TRANSFER_LABEL = { ACCEPTED: '已受理', PROCESSING: '锁定资金', WAIT_USER_CONFIRM: '待确认', TRANSFERING: '转账中', SUCCESS: '成功', FAIL: '失败', CANCELING: '撤销中', CANCELLED: '已撤销' }
 
 async function renderWithdrawals() {
   const status = $('#wd-status') ? $('#wd-status').value : 'pending'
   const q = status ? '?status=' + status : ''
   const list = await api('/wallet/withdrawals/admin' + q)
-  const rows = list.map((w) => `
+  const rows = list.map((w) => {
+    const transfer = w.transfer_status
+      ? (WD_TRANSFER_LABEL[w.transfer_status] || w.transfer_status)
+      : (w.status === 'paid' ? '—' : '未发起')
+    const failTxt = w.fail_reason ? `<div style="color:#e54d42">${esc(w.fail_reason)}</div>` : ''
+    let ops
+    if (w.status === 'pending') {
+      ops = `<button class="btn btn-sm btn-success" onclick="doConfirmPaid(${w.id})">手动确认</button>`
+    } else if (w.status === 'rejected' && w.transfer_status === 'FAIL') {
+      ops = `<button class="btn btn-sm" onclick="doRetryPaid(${w.id})">失败补发</button>${w.out_bill_no ? ' 单号:' + esc(w.out_bill_no) : ''}`
+    } else {
+      ops = `${w.out_bill_no ? ('单号:' + esc(w.out_bill_no) + ' ') : ''}${w.paid_source ? (w.paid_source === 'manual' ? '手动' : '自动') : ''}`
+    }
+    return `
     <tr>
       <td>${w.id}</td>
       <td>${esc(w.user_name || '-')}</td>
@@ -354,13 +368,12 @@ async function renderWithdrawals() {
       <td><span class="tag ${w.status}">${WD_STATUS_LABEL[w.status] || w.status}</span></td>
       <td>${w.apply_time ? new Date(w.apply_time).toLocaleString() : '-'}</td>
       <td>${w.paid_time ? new Date(w.paid_time).toLocaleString() : '-'}</td>
-      <td class="ops">${w.status === 'pending'
-        ? `<button class="btn btn-sm btn-success" onclick="doConfirmPaid(${w.id})">确认到账</button>`
-        : `${w.pay_ref_no ? ('单号:' + esc(w.pay_ref_no) + ' ') : ''}${w.paid_source ? (w.paid_source === 'manual' ? '手动' : '自动') : ''}`}
-      </td>
-    </tr>`).join('')
+      <td>${transfer}${failTxt}</td>
+      <td class="ops">${ops}</td>
+    </tr>`
+  }).join('')
   $('#page-content').innerHTML = `
-    <div class="page-title">提现确认 <span style="font-size:13px;color:var(--muted)">（免审核，财务确认到账置 paid，D4-2 半自动兜底）</span></div>
+    <div class="page-title">提现确认 <span style="font-size:13px;color:var(--muted)">（申请即自动微信打款；失败补发/手动确认兜底）</span></div>
     <div class="panel">
       <div class="filters">
         <select id="wd-status" onchange="renderWithdrawals()">
@@ -370,8 +383,8 @@ async function renderWithdrawals() {
         </select>
       </div>
       <table>
-        <thead><tr><th>ID</th><th>姓名</th><th>openid</th><th>金额</th><th>收款账户</th><th>状态</th><th>申请时间</th><th>到账时间</th><th>操作</th></tr></thead>
-        <tbody>${rows || '<tr><td colspan="9" class="empty">暂无提现记录</td></tr>'}</tbody>
+        <thead><tr><th>ID</th><th>姓名</th><th>openid</th><th>金额</th><th>收款账户</th><th>状态</th><th>申请时间</th><th>到账时间</th><th>转账状态</th><th>操作</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="10" class="empty">暂无提现记录</td></tr>'}</tbody>
       </table>
     </div>`
 }
@@ -380,6 +393,13 @@ async function doConfirmPaid(id) {
   const payRefNo = (prompt('到账单号（可空，用于对账）') || '').trim()
   await api(`/wallet/withdrawals/${id}/confirm`, { method: 'POST', body: { pay_ref_no: payRefNo, paid_source: 'manual' } })
   toast('已确认到账'); renderWithdrawals()
+}
+
+async function doRetryPaid(id) {
+  const res = confirm('确认对该笔提现重新发起微信自动打款？')
+  if (!res) return
+  await api(`/wallet/withdrawals/${id}/retry`, { method: 'POST' })
+  toast('已发起补发'); renderWithdrawals()
 }
 
 /* ---------------- 台账 / 对账导出（T5-5，对接 T4-5） ---------------- */

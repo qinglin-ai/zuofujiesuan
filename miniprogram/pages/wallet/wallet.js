@@ -1,7 +1,14 @@
 const request = require('../../utils/request')
 const tokenManager = require('../../utils/token')
 
-const WD_STATUS = { pending: '提现中', paid: '已到账', rejected: '已拒绝' }
+const WD_STATUS = { pending: '转账中', paid: '已到账', rejected: '已拒绝' }
+const WD_TRANSFER_TEXT = {
+  WAIT_USER_CONFIRM: '待收款确认',
+  TRANSFERING: '转账中',
+  PROCESSING: '转账中',
+  SUCCESS: '已到账',
+  FAIL: '转账失败',
+}
 
 Page({
   data: {
@@ -38,7 +45,14 @@ Page({
       const bank_tail = info.bank_info && info.bank_info.cardNo
         ? `${info.bank_info.bankName || ''} ···${String(info.bank_info.cardNo).slice(-4)}（${info.bank_info.cardHolder || ''}）`
         : ''
-      const withdrawals = wds.map((w) => ({ ...w, status_text: WD_STATUS[w.status] || w.status }))
+      const withdrawals = wds.map((w) => {
+        let status_text = WD_STATUS[w.status] || w.status
+        // 转账中细化展示（待收款确认需用户在小程序内确认收款）
+        if (w.status === 'pending' && w.transfer_status && WD_TRANSFER_TEXT[w.transfer_status]) {
+          status_text = WD_TRANSFER_TEXT[w.transfer_status]
+        }
+        return { ...w, status_text, fail_reason: w.fail_reason || '' }
+      })
       this.setData({
         info: { ...info, bank_tail },
         commissions,
@@ -94,7 +108,7 @@ Page({
     if (!res.confirm) return
     try {
       await request.post('/api/wallet/withdrawals', { amount: this.data.withdrawAmount })
-      wx.showToast({ title: '申请成功', icon: 'success' })
+      wx.showToast({ title: '提现已受理，转账中', icon: 'success' })
       this.setData({ withdrawAmount: '' })
       this._load()
     } catch (err) {
