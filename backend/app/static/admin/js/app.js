@@ -20,6 +20,8 @@ const TYPE_LABEL = { alter_original: '改动原图', edit_jitter: '抖动', subm
 const PUNISH_LABEL = { warning: '警告', suspend: '停权', block: '封禁' }
 const ANNOT_LABEL = { shadow: '阴影', light_source: '光源', reflection: '反射', exposure: '曝光', filter: '滤镜' }
 const LEVEL_LABEL = { junior: '初级', middle: '中级', senior: '高级' }
+const TASK_STATUS_LABEL = { open: '上架中', inProgress: '进行中', closed: '已关闭' }
+const TASK_STATUS_TAG = { open: 'active', inProgress: 'pending', closed: 'rejected' }
 const TARGET_LABEL = { all: '全部', worker: '兼职', admin: '管理', skill: '技能组' }
 const NOTICE_TYPE_LABEL = { notice: '公告', flow: '流程', project: '项目动态', faq: 'FAQ' }
 
@@ -110,7 +112,7 @@ function switchPage(page) {
   document.querySelectorAll('.sidebar nav a[data-page]').forEach((a) => {
     a.classList.toggle('active', a.dataset.page === page)
   })
-  const renderers = { users: renderUsers, quality: renderQuality, certifications: renderCertifications, violations: renderViolations, notices: renderNotices, withdrawals: renderWithdrawals, ledger: renderLedger }
+  const renderers = { users: renderUsers, tasks: renderTasks, quality: renderQuality, certifications: renderCertifications, violations: renderViolations, notices: renderNotices, withdrawals: renderWithdrawals, ledger: renderLedger }
   ;(renderers[page] || renderUsers)()
 }
 
@@ -210,7 +212,16 @@ async function doQcReject(id) {
 
 /* ---------------- 能力认证（T5-4） ---------------- */
 async function renderCertifications() {
-  const list = await api('/certifications/list')
+  const [list, users, tasks] = await Promise.all([
+    api('/certifications/list'),
+    api('/users?approval_status=approved&status=active'),
+    api('/tasks'),
+  ])
+  const taskAnnot = {}
+  tasks.forEach((t) => { taskAnnot[t.id] = t.annot_type })
+  window.__cgTaskAnnot = taskAnnot
+  const userOpts = users.map((u) => `<option value="${esc(u.openid)}">${esc(u.real_name || '')}（${esc(u.phone || '')}）</option>`).join('')
+  const taskOpts = tasks.map((t) => `<option value="${t.id}">${t.id} · ${esc(t.title)}（${ANNOT_LABEL[t.annot_type] || ''}）</option>`).join('')
   const rows = list.map((c) => `
     <tr>
       <td>${c.id}</td>
@@ -226,11 +237,51 @@ async function renderCertifications() {
   $('#page-content').innerHTML = `
     <div class="page-title">能力认证管理</div>
     <div class="panel">
+      <h3>指派认证</h3>
+      <div class="form-grid">
+        <label>用户 *<select id="cg-user"><option value="">请选择</option>${userOpts}</select></label>
+        <label>任务 *<select id="cg-task" onchange="onCgTaskChange()"><option value="">请选择</option>${taskOpts}</select></label>
+        <label>标注类型 *<select id="cg-annot">${Object.entries(ANNOT_LABEL).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select></label>
+        <label>等级<select id="cg-level"><option value="">不指定</option>${Object.entries(LEVEL_LABEL).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select></label>
+        <label>是否通过 *<select id="cg-passed"><option value="true">通过</option><option value="false">未过</option></select></label>
+        <label>通过率<input id="cg-rate" type="number" min="0" max="100" placeholder="0~100，可空"></label>
+        <label>&nbsp;<button class="btn" onclick="doGrantCert()">指派认证</button></label>
+      </div>
+      <div class="form-tip">指派即视为复核：需勾选「通过」并选择等级后，兼职方可领取对应任务；已存在的同任务同类型认证将被覆盖</div>
+    </div>
+    <div class="panel">
       <table>
         <thead><tr><th>ID</th><th>姓名</th><th>任务</th><th>标注类型</th><th>考试</th><th>等级</th><th>通过率</th><th>复核时间</th><th>操作</th></tr></thead>
         <tbody>${rows || '<tr><td colspan="9" class="empty">暂无认证记录</td></tr>'}</tbody>
       </table>
     </div>`
+}
+
+function onCgTaskChange() {
+  const annot = window.__cgTaskAnnot[$('#cg-task').value]
+  if (annot) $('#cg-annot').value = annot
+}
+
+async function doGrantCert() {
+  const openid = $('#cg-user').value
+  const taskId = $('#cg-task').value
+  const annotType = $('#cg-annot').value
+  if (!openid || !taskId || !annotType) { toast('请选择用户、任务与标注类型', true); return }
+  const rateVal = $('#cg-rate').value.trim()
+  const passRate = rateVal ? Number(rateVal) : undefined
+  if (rateVal && (isNaN(passRate) || passRate < 0 || passRate > 100)) { toast('通过率需在 0~100', true); return }
+  await api('/certifications/grant', {
+    method: 'POST',
+    body: {
+      openid,
+      task_id: Number(taskId),
+      annot_type: annotType,
+      level: $('#cg-level').value || undefined,
+      exam_passed: $('#cg-passed').value === 'true',
+      pass_rate: passRate,
+    },
+  })
+  toast('已指派认证'); renderCertifications()
 }
 
 function openRate(id, userName) {
@@ -335,6 +386,102 @@ async function doNewNotice() {
   if (!title || !content) { toast('标题与内容必填', true); return }
   await api('/notices', { method: 'POST', body: { title, content, target: $('#n-target').value, type: $('#n-type').value } })
   toast('已发布'); renderNotices()
+}
+
+/* ---------------- 任务管理（T3-3 建单 + 状态流转） ---------------- */
+async function renderTasks() {
+  const status = $('#t-status') ? $('#t-status').value : ''
+  const q = status ? '?status=' + encodeURIComponent(status) : ''
+  const list = await api('/tasks' + q)
+  const rows = list.map((t) => `
+    <tr>
+      <td>${t.id}</td>
+      <td>${esc(t.title)}</td>
+      <td>${ANNOT_LABEL[t.annot_type] || '-'}</td>
+      <td>${LEVEL_LABEL[t.difficulty] || '-'}</td>
+      <td>${LEVEL_LABEL[t.require_level] || '-'}</td>
+      <td>${t.quantity}</td>
+      <td>${t.claimed_count}</td>
+      <td>${t.total_people}</td>
+      <td>￥${esc(t.unit_price)}</td>
+      <td>${t.deadline ? new Date(t.deadline).toLocaleString() : '-'}</td>
+      <td><span class="tag ${TASK_STATUS_TAG[t.status]}">${TASK_STATUS_LABEL[t.status] || t.status}</span></td>
+      <td class="ops">
+        ${t.status === 'open' ? `<button class="btn btn-sm" onclick="doTaskStatus(${t.id},'inProgress')">进行中</button>
+          <button class="btn btn-sm btn-danger-ghost" onclick="doTaskStatus(${t.id},'closed')">关闭</button>` : ''}
+        ${t.status === 'inProgress' ? `<button class="btn btn-sm" onclick="doTaskStatus(${t.id},'open')">重新上架</button>
+          <button class="btn btn-sm btn-danger-ghost" onclick="doTaskStatus(${t.id},'closed')">关闭</button>` : ''}
+        ${t.status === 'closed' ? `<button class="btn btn-sm btn-success" onclick="doTaskStatus(${t.id},'open')">重新上架</button>` : ''}
+      </td>
+    </tr>`).join('')
+  $('#page-content').innerHTML = `
+    <div class="page-title">任务管理</div>
+    <div class="panel">
+      <h3>发布任务</h3>
+      <div class="form-grid">
+        <label>任务名 *<input id="t-title" placeholder="必填"></label>
+        <label>标注类型 *<select id="t-annot">${Object.entries(ANNOT_LABEL).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select></label>
+        <label>难度<select id="t-difficulty"><option value="">不限</option>${Object.entries(LEVEL_LABEL).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select></label>
+        <label>要求等级<select id="t-require-level"><option value="">不限</option>${Object.entries(LEVEL_LABEL).map(([k, v]) => `<option value="${k}">${v}</option>`).join('')}</select></label>
+        <label>单人任务量（每人件数）*<input id="t-quantity" type="number" min="1" step="1" placeholder="每人需完成件数"></label>
+        <label>总人数 *<input id="t-total-people" type="number" min="1" step="1"></label>
+        <label>单价（元/件）*<input id="t-unit-price" type="number" min="0.01" step="0.01"></label>
+        <label>截止时间<input id="t-deadline" type="datetime-local"></label>
+        <label>任务描述<textarea id="t-description"></textarea></label>
+        <label>违禁项（每行一项）<textarea id="t-forbidden"></textarea></label>
+        <label>示例图 URL<input id="t-sample-url"></label>
+        <label>&nbsp;<button class="btn" onclick="doNewTask()">发布任务</button></label>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="filters">
+        <select id="t-status" onchange="renderTasks()">
+          <option value="">状态:全部</option>
+          <option value="open" ${status === 'open' ? 'selected' : ''}>上架中</option>
+          <option value="inProgress" ${status === 'inProgress' ? 'selected' : ''}>进行中</option>
+          <option value="closed" ${status === 'closed' ? 'selected' : ''}>已关闭</option>
+        </select>
+      </div>
+      <table>
+        <thead><tr><th>ID</th><th>标题</th><th>类型</th><th>难度</th><th>要求等级</th><th>单人量</th><th>已领</th><th>总人数</th><th>单价</th><th>截止</th><th>状态</th><th>操作</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="12" class="empty">暂无任务</td></tr>'}</tbody>
+      </table>
+    </div>`
+}
+
+async function doNewTask() {
+  const title = $('#t-title').value.trim()
+  if (!title) { toast('任务名必填', true); return }
+  const quantity = Number($('#t-quantity').value)
+  const totalPeople = Number($('#t-total-people').value)
+  const unitPrice = Number($('#t-unit-price').value)
+  if (!Number.isInteger(quantity) || quantity <= 0) { toast('数量需为正整数', true); return }
+  if (!Number.isInteger(totalPeople) || totalPeople <= 0) { toast('总人数需为正整数', true); return }
+  if (!(unitPrice > 0)) { toast('单价需为正数', true); return }
+  const forbidden = $('#t-forbidden').value.split(/\n/).map((s) => s.trim()).filter(Boolean)
+  await api('/tasks', {
+    method: 'POST',
+    body: {
+      title,
+      annot_type: $('#t-annot').value,
+      difficulty: $('#t-difficulty').value || undefined,
+      require_level: $('#t-require-level').value || undefined,
+      quantity,
+      total_people: totalPeople,
+      unit_price: unitPrice,
+      deadline: $('#t-deadline').value || undefined,
+      description: $('#t-description').value.trim() || undefined,
+      forbidden_items: forbidden.length ? forbidden : undefined,
+      sample_url: $('#t-sample-url').value.trim() || undefined,
+    },
+  })
+  toast('已发布'); renderTasks()
+}
+
+async function doTaskStatus(id, status) {
+  if (status === 'closed' && !confirm('确认关闭该任务？已领取的作业仍可正常提交和核验。')) return
+  await api(`/tasks/${id}/status`, { method: 'POST', body: { status } })
+  toast('已更新'); renderTasks()
 }
 
 /* ---------------- 提现确认（T4-3 半自动回写 + 微信自动打款 T4-6） ---------------- */

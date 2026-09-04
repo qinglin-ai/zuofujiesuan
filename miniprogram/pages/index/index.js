@@ -53,6 +53,10 @@ Page({
     this.setData({ logged: false })
   },
 
+  goCertify() {
+    wx.navigateTo({ url: '/pages/certify/certify' })
+  },
+
   goLogin() {
     wx.navigateTo({ url: '/pages/login/login' })
   }

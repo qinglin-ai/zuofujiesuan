@@ -22,7 +22,8 @@
     我的认证：{{task.my_cert.exam_passed ? '已通过' : '未通过'}}<text wx:if="{{task.cert_level_text}}"> · {{task.cert_level_text}}</text>
   </view>
 
-  <button class="claim-btn" type="primary" wx:if="{{task.can_claim}}" bindtap="onClaim">领取任务</button>
+  <button class="claim-btn" type="primary" wx:if="{{task.need_cert}}" bindtap="goCert">去认证</button>
+  <button class="claim-btn" type="primary" wx:elif="{{task.can_claim}}" bindtap="onClaim">领取任务</button>
   <view class="claim-state" wx:elif="{{task.my_status}}">已{{task.my_status === 'claimed' ? '领取，请到"我的作业"提交' : (task.my_status === 'submitted' ? '提交，等待核验' : (task.my_status === 'passed' ? '通过' : '未通过'))}}</view>
   <view class="claim-state" wx:else>任务已满员或已关闭</view>
 

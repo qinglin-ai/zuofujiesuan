@@ -19,6 +19,17 @@ VALID_ANNOT = {"shadow", "light_source", "reflection", "exposure", "filter"}
 VALID_LEVEL = {"junior", "middle", "senior"}
 
 
+def _parse_pass_rate(value):
+    """解析 0~100 通过率，返回 (rate, err_msg)。"""
+    try:
+        rate = float(value)
+    except (TypeError, ValueError):
+        return None, "pass_rate 无效"
+    if not (0 <= rate <= 100):
+        return None, "pass_rate 需在 0~100"
+    return rate, None
+
+
 def _public_cert(cert):
     return {
         "id": cert.id,
@@ -67,12 +78,9 @@ def submit_exam():
     if pass_rate is None:
         exam_passed = False
     else:
-        try:
-            pass_rate = float(pass_rate)
-        except (TypeError, ValueError):
-            return {"code": 400, "message": "pass_rate 无效"}, 400
-        if not (0 <= pass_rate <= 100):
-            return {"code": 400, "message": "pass_rate 需在 0~100"}, 400
+        pass_rate, err = _parse_pass_rate(pass_rate)
+        if err:
+            return {"code": 400, "message": err}, 400
         exam_passed = bool(body.get("exam_passed", pass_rate >= 60))
 
     task = db.session.get(Task, task_id)
@@ -126,15 +134,84 @@ def rate(cert_id):
     if "exam_passed" in body:
         cert.exam_passed = bool(body["exam_passed"])
     if "pass_rate" in body:
-        pass_rate = body["pass_rate"]
-        try:
-            pass_rate = float(pass_rate)
-        except (TypeError, ValueError):
-            return {"code": 400, "message": "pass_rate 无效"}, 400
-        if not (0 <= pass_rate <= 100):
-            return {"code": 400, "message": "pass_rate 需在 0~100"}, 400
+        pass_rate, err = _parse_pass_rate(body["pass_rate"])
+        if err:
+            return {"code": 400, "message": err}, 400
         cert.pass_rate = pass_rate
 
+    cert.reviewed_by = g.openid
+    cert.review_time = datetime.utcnow()
+    db.session.commit()
+    return {"code": 0, "data": _public_cert(cert)}
+
+
+@bp.post("/grant")
+@require_role("admin")
+def grant():
+    """管理端指派/覆盖认证：从零给指定用户授予某任务某类型的认证（幂等 upsert）。
+
+    body: { openid, task_id, annot_type, level?, exam_passed, pass_rate? }
+    """
+    body = request.get_json(silent=True) or {}
+    openid = (body.get("openid") or "").strip()
+    if not openid:
+        return {"code": 400, "message": "openid 必填"}, 400
+    user = db.session.execute(
+        db.select(User).where(User.openid == openid)
+    ).scalar_one_or_none()
+    if not user:
+        return {"code": 404, "message": "用户不存在"}, 404
+
+    try:
+        task_id = int(body.get("task_id"))
+    except (TypeError, ValueError):
+        return {"code": 400, "message": "task_id 无效"}, 400
+    task = db.session.get(Task, task_id)
+    if not task:
+        return {"code": 404, "message": "任务不存在"}, 404
+
+    annot_type = (body.get("annot_type") or "").strip()
+    if annot_type not in VALID_ANNOT:
+        return {"code": 400, "message": "annot_type 无效"}, 400
+
+    level = (body.get("level") or "").strip()
+    if level and level not in VALID_LEVEL:
+        return {"code": 400, "message": "level 无效"}, 400
+
+    exam_passed = body.get("exam_passed")
+    if not isinstance(exam_passed, bool):
+        return {"code": 400, "message": "exam_passed 需为布尔值"}, 400
+
+    pass_rate = None
+    if body.get("pass_rate") is not None:
+        pass_rate, err = _parse_pass_rate(body.get("pass_rate"))
+        if err:
+            return {"code": 400, "message": err}, 400
+
+    cert = db.session.execute(
+        db.select(Certification).where(
+            Certification.openid == openid,
+            Certification.task_id == task_id,
+            Certification.annot_type == annot_type,
+        )
+    ).scalar_one_or_none()
+    if cert:
+        cert.exam_passed = exam_passed
+        if pass_rate is not None:
+            cert.pass_rate = pass_rate
+        if level:
+            cert.level = level
+    else:
+        cert = Certification(
+            openid=openid,
+            task_id=task_id,
+            task_name=task.title,
+            annot_type=annot_type,
+            level=level or None,
+            exam_passed=exam_passed,
+            pass_rate=pass_rate,
+        )
+        db.session.add(cert)
     cert.reviewed_by = g.openid
     cert.review_time = datetime.utcnow()
     db.session.commit()

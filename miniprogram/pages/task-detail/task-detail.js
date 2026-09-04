@@ -2,6 +2,7 @@ const request = require('../../utils/request')
 const tokenManager = require('../../utils/token')
 
 const DIFFICULTY_TEXT = { junior: '初级', middle: '中级', senior: '高级' }
+const LEVEL_RANK = { junior: 1, middle: 2, senior: 3 }
 const ANNOT_TEXT = {
   shadow: '阴影标注',
   light_source: '光源标注',
@@ -37,7 +38,11 @@ Page({
       t.difficulty_text = DIFFICULTY_TEXT[t.difficulty] || ''
       t.annot_text = ANNOT_TEXT[t.annot_type] || t.annot_type || ''
       t.remain = t.total_people - t.claimed_count
-      t.can_claim = t.status === 'open' && !t.my_status
+      const cert = t.my_cert
+      const certOk = !!cert && !!cert.exam_passed &&
+        (!t.require_level || LEVEL_RANK[cert.level] >= LEVEL_RANK[t.require_level])
+      t.can_claim = t.status === 'open' && !t.my_status && certOk
+      t.need_cert = t.status === 'open' && !t.my_status && !certOk
       t.require_level_text = DIFFICULTY_TEXT[t.require_level] || ''
       t.cert_level_text = t.my_cert ? (DIFFICULTY_TEXT[t.my_cert.level] || '') : ''
       t.forbidden_text = (t.forbidden_items && t.forbidden_items.length) ? t.forbidden_items.join('、') : ''
@@ -45,6 +50,10 @@ Page({
     } catch (e) {
       this.setData({ loading: false, error: (e && e.message) || '加载失败' })
     }
+  },
+
+  goCert() {
+    wx.navigateTo({ url: '/pages/certify/certify?task_id=' + this.taskId })
   },
 
   async onClaim() {

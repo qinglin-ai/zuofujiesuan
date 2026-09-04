@@ -1,0 +1,93 @@
+.page {
+  padding: 24rpx;
+  min-height: 100vh;
+  background: #f5f6f8;
+}
+.empty {
+  text-align: center;
+  color: #999;
+  padding: 80rpx 0;
+}
+.card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+}
+.card-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  margin-bottom: 16rpx;
+}
+.form-tip {
+  font-size: 24rpx;
+  color: #999;
+  margin-bottom: 16rpx;
+}
+.ipt {
+  border: 1rpx solid #e5e6eb;
+  border-radius: 8rpx;
+  padding: 16rpx 20rpx;
+  font-size: 28rpx;
+  margin-bottom: 16rpx;
+}
+.picker {
+  color: #333;
+}
+.picker.static {
+  background: #f5f6f8;
+  color: #666;
+}
+.switch-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8rpx 0 24rpx;
+}
+.switch-label {
+  font-size: 28rpx;
+  color: #333;
+}
+.cert-item {
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+.cert-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.row-title {
+  font-size: 28rpx;
+  font-weight: 500;
+  flex: 1;
+  margin-right: 16rpx;
+}
+.row-sub {
+  font-size: 24rpx;
+  color: #999;
+  margin-top: 6rpx;
+}
+.status {
+  display: inline-block;
+  font-size: 22rpx;
+  padding: 4rpx 14rpx;
+  border-radius: 8rpx;
+  flex-shrink: 0;
+}
+.st-pending {
+  color: #b06000;
+  background: #fef7e0;
+}
+.st-paid {
+  color: #1a7f37;
+  background: #e6f4ea;
+}
+.st-rejected {
+  color: #c5221f;
+  background: #fce8e6;
+}

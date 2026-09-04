@@ -4,7 +4,10 @@
   <view class="profile">
     <view class="status {{logged ? 'on' : ''}}">{{logged ? '已登录' : '未登录'}}</view>
     <button wx:if="{{!logged}}" class="main-btn" bindtap="goLogin">去登录</button>
-    <button wx:else class="main-btn plain" bindtap="onLogout">退出登录</button>
+    <view wx:else class="actions">
+      <button class="main-btn cert" bindtap="goCertify">能力认证</button>
+      <button class="main-btn plain" bindtap="onLogout">退出登录</button>
+    </view>
   </view>
 
   <!-- 开发环境诊断：仅开发版显示，正式版不展示 -->

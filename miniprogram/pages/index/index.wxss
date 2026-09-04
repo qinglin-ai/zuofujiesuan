@@ -38,6 +38,23 @@
   color: #d43c33;
   border: 1rpx solid #d43c33;
 }
+.main-btn.cert {
+  background: #fff;
+  color: #1989fa;
+  border: 1rpx solid #1989fa;
+}
+.actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.actions .main-btn {
+  margin-bottom: 20rpx;
+}
+.actions .main-btn:last-child {
+  margin-bottom: 0;
+}
 .dev {
   background: #fff;
   border-radius: 16rpx;

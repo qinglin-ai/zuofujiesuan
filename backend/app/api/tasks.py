@@ -275,6 +275,35 @@ def claim_task(task_id):
     return {"code": 0, "message": "领取成功", "data": _public_assignment(assignment)}
 
 
+# ---------- 任务状态流转（管理端：上架/进行中/关闭） ----------
+
+_TASK_STATUS_FLOW = {
+    "open": {"inProgress", "closed"},
+    "inProgress": {"open", "closed"},
+    "closed": {"open"},
+}
+VALID_TASK_STATUS = {"open", "inProgress", "closed"}
+
+
+@bp.post("/<int:task_id>/status")
+@require_role("admin")
+def set_task_status(task_id):
+    """管理员变更任务状态（上架/进行中/关闭），仅改 status 字段；同状态幂等 no-op。"""
+    task = db.session.get(Task, task_id)
+    if not task:
+        return {"code": 404, "message": "任务不存在"}, 404
+    status = (request.get_json(silent=True) or {}).get("status")
+    if status not in VALID_TASK_STATUS:
+        return {"code": 400, "message": "status 无效"}, 400
+    if status == task.status:
+        return {"code": 0, "message": "ok", "data": _public_task(task)}  # 同状态幂等 no-op
+    if status not in _TASK_STATUS_FLOW.get(task.status, set()):
+        return {"code": 400, "message": f"不允许从 {task.status} 变更为 {status}"}, 400
+    task.status = status
+    db.session.commit()
+    return {"code": 0, "message": "ok", "data": _public_task(task)}
+
+
 # ---------- T3-6 作业提交（claimed -> submitted） ----------
 
 @bp.post("/<int:task_id>/assignments/<int:assignment_id>/submit")

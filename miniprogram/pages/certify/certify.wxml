@@ -1,0 +1,39 @@
+<view class="page">
+  <view wx:if="{{loading}}" class="empty">加载中...</view>
+  <view wx:elif="{{error}}" class="empty">{{error}}</view>
+
+  <block wx:else>
+    <!-- 发起认证 -->
+    <view class="card">
+      <view class="card-title">发起认证</view>
+      <view class="form-tip">选择任务并提交考试成绩（0~100），管理员复核评级通过后即可领取对应任务</view>
+      <picker wx:if="{{showTaskPicker}}" mode="selector" range="{{taskOptions}}" range-key="label" bindchange="onTaskChange">
+        <view class="ipt picker">{{selectedTaskLabel || '请选择任务'}}</view>
+      </picker>
+      <view wx:else class="ipt picker static">{{selectedTaskLabel}}</view>
+      <picker mode="selector" range="{{annotList}}" range-key="label" bindchange="onAnnotChange">
+        <view class="ipt picker">{{annotLabel}}</view>
+      </picker>
+      <input class="ipt" type="digit" placeholder="考试成绩 0~100" value="{{form.pass_rate}}" bindinput="onRateInput" />
+      <view class="switch-row">
+        <text class="switch-label">考试是否通过</text>
+        <switch checked="{{form.exam_passed}}" bindchange="onExamSwitch" color="#1989fa" />
+      </view>
+      <button type="primary" bindtap="onSubmit">提交认证</button>
+    </view>
+
+    <!-- 我的认证 -->
+    <view class="card">
+      <view class="card-title">我的认证</view>
+      <view wx:if="{{!certs.length}}" class="empty">暂无认证记录</view>
+      <view class="cert-item" wx:for="{{certs}}" wx:key="id">
+        <view class="row">
+          <view class="row-title">{{item.task_name}}</view>
+          <view class="status {{item.status_text === '已通过' ? 'st-paid' : (item.status_text === '未通过' ? 'st-rejected' : 'st-pending')}}">{{item.status_text}}</view>
+        </view>
+        <view class="row-sub">{{item.annot_text}}<text wx:if="{{item.level_text}}"> · {{item.level_text}}</text><text wx:if="{{item.pass_rate != null}}"> · 成绩 {{item.pass_rate}}</text></view>
+        <view class="row-sub" wx:if="{{item.review_time}}">复核于 {{item.review_time}}</view>
+      </view>
+    </view>
+  </block>
+</view>
