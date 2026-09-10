@@ -5,8 +5,9 @@
   commissions.assignment_id 唯一索引保证幂等（即使并发重复触发也只入账一次）。
 - T4-2 提现申请：校验 amount <= available_balance 且已绑卡，事务内「扣余额 + 写提现记录」，免二次审核；
   提交后同步调用微信「商家转账到零钱」自动打款（T4-6）。
-- T4-3 提现回写：微信异步回调收口（成功置 paid）；失败自动换单重试一次，仍失败置 rejected 转人工；
-  财务仍可手动确认到账（manual 兜底）或对失败单「补发」。
+- T4-3 提现回写：微信异步回调收口（成功置 paid）；FAIL/CANCELLED 自动换单重试一次：
+  FAIL 重试耗尽置 rejected 转人工（余额不退，可「补发」）；CANCELLED（转账未确认被取消）重试耗尽置 rejected 并退回余额。
+  财务仍可手动确认到账（manual 兜底）。
 - T4-4 余额与流水：兼职端本人可读 balances/commissions/withdrawals。
 - T4-5 台账/对账导出：按日聚合 commissions + withdrawals，固定 Excel 模板（含佣金列/提现列/汇总行）。
 
@@ -112,6 +113,7 @@ def _withdrawal_view(w):
         "transfer_time": w.transfer_time.isoformat() if w.transfer_time else None,
         "fail_reason": w.fail_reason,
         "retry_count": w.retry_count,
+        "balance_refunded": bool(w.balance_refunded),
         "apply_time": w.apply_time.isoformat() if w.apply_time else None,
         "paid_time": w.paid_time.isoformat() if w.paid_time else None,
     }
@@ -248,6 +250,29 @@ def _mark_rejected(w, out_bill_no, q, reason=None):
     return w.status
 
 
+def _mark_rejected_refund(w, out_bill_no, q, reason=None):
+    """CANCELLED 换单重试耗尽：置 rejected 并把金额退回用户可提现余额。
+
+    转账因超时未确认被微信取消（CANCELLED 为终态，钱已退回商户账户），
+    退回余额不存在重复打款风险；标记 balance_refunded 阻止管理员重复「失败补发」。
+    """
+    balance = db.session.execute(
+        db.select(Balance).where(Balance.openid == w.openid)
+    ).scalar_one_or_none()
+    w.status = "rejected"
+    w.out_bill_no = out_bill_no
+    if q and q.get("transfer_bill_no"):
+        w.transfer_bill_no = q["transfer_bill_no"]
+    w.transfer_status = "CANCELLED"
+    w.fail_reason = reason or ((q or {}).get("fail_reason")) or "转账未确认已取消，余额已退回"
+    w.transfer_time = datetime.utcnow()
+    w.balance_refunded = True
+    if balance is not None:
+        balance.available_balance = _to_decimal(balance.available_balance or 0) + _to_decimal(w.amount)
+    db.session.commit()
+    return w.status
+
+
 def _persist_transfer(w, out_bill_no, state, bill_no=None, fail_reason=None):
     """落库转账中间状态（用于重试前记录旧单已 FAIL，便于陈旧回调识别）。"""
     w.out_bill_no = out_bill_no
@@ -311,15 +336,17 @@ def auto_transfer_withdrawal(w):
                 return _mark_rejected(w, out_bill_no, result["q"])
             if state == "UNKNOWN":
                 return _keep_pending(w, out_bill_no, result["q"], note=result["q"].get("fail_reason"))
-            if state == "FAIL":
+            if state in ("FAIL", "CANCELLED"):
                 if int(w.retry_count or 0) < retry_max:
                     w.retry_count = int(w.retry_count or 0) + 1
                     _persist_transfer(
-                        w, out_bill_no, "FAIL",
+                        w, out_bill_no, state,
                         result["q"].get("transfer_bill_no"),
                         result["q"].get("fail_reason"),
                     )
-                    continue  # 查单明确 FAIL → 允许换单重试（新 out_bill_no）
+                    continue  # 明确终态（FAIL 查单确认 / CANCELLED 已取消，钱在商户侧）→ 允许换单重试（新 out_bill_no）
+                if state == "CANCELLED":
+                    return _mark_rejected_refund(w, out_bill_no, result["q"])
                 return _mark_rejected(w, out_bill_no, result["q"])
             # 非终态：ACCEPTED/PROCESSING/WAIT_USER_CONFIRM/TRANSFERING/CANCELING → 等回调
             return _keep_pending(w, out_bill_no, result["q"])
@@ -329,14 +356,25 @@ def auto_transfer_withdrawal(w):
         return w.status
 
 
-def _apply_fail(w, out_bill_no, event):
-    """notify 回调 FAIL 收口：未达上限自动换单重试一次，否则转人工（余额不退）。"""
+def _apply_terminal(w, out_bill_no, event, state):
+    """notify 回调 FAIL/CANCELLED 收口：未达上限自动换单重试一次，否则终态收口。
+
+    - FAIL 重试耗尽 → 置 rejected 转人工补发（余额不退）；
+    - CANCELLED 重试耗尽 → 置 rejected 并退回余额（转账已取消、钱在商户账户）。
+    """
     retry_max = int(current_app.config.get("WXPAY_RETRY_MAX", 1))
-    reason = event.get("fail_reason") or "微信转账失败"
+    reason = event.get("fail_reason") or ("转账未确认已取消" if state == "CANCELLED" else "微信转账失败")
     if int(w.retry_count or 0) < retry_max:
         w.retry_count = int(w.retry_count or 0) + 1
-        _persist_transfer(w, out_bill_no, "FAIL", event.get("transfer_bill_no"), reason)
+        _persist_transfer(w, out_bill_no, state, event.get("transfer_bill_no"), reason)
         auto_transfer_withdrawal(w)  # 换单重试（内部已捕获异常）
+        return
+    if state == "CANCELLED":
+        _mark_rejected_refund(
+            w, out_bill_no,
+            {"state": "CANCELLED", "transfer_bill_no": event.get("transfer_bill_no")},
+            reason,
+        )
         return
     _mark_rejected(
         w, out_bill_no,
@@ -363,10 +401,10 @@ def handle_transfer_event(out_bill_no, event):
         if w.status == "paid":
             return True  # 幂等
         _mark_paid(w, out_bill_no, {"state": "SUCCESS", "transfer_bill_no": event.get("transfer_bill_no")})
-    elif state == "FAIL":
+    elif state in ("FAIL", "CANCELLED"):
         if w.status == "rejected":
-            return True  # 幂等
-        _apply_fail(w, out_bill_no, event)
+            return True  # 幂等（含 CANCELLED 已退余额的单，防止重复退款）
+        _apply_terminal(w, out_bill_no, event, state)
     else:
         _keep_pending(w, out_bill_no, {"state": state, "transfer_bill_no": event.get("transfer_bill_no")})
     return True
@@ -469,6 +507,8 @@ def retry_withdrawal(withdrawal_id):
         return {"code": 404, "message": "提现记录不存在"}, 404
     if record.status != "rejected" and not (record.status == "pending" and not record.out_bill_no):
         return {"code": 400, "message": f"当前状态 {record.status} 不可补发"}, 400
+    if record.balance_refunded:
+        return {"code": 400, "message": "该提现余额已退回用户，请让用户重新申请提现"}, 400
 
     # 若有旧单号，先查单：旧单已到账则无需补发（防重复打款）
     if record.out_bill_no:

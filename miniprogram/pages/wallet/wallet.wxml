@@ -58,6 +58,8 @@
           <view class="row-title">提现申请 · ￥{{item.amount}}</view>
           <view class="row-sub">{{item.apply_time}}</view>
           <view class="status st-{{item.status}}">{{item.status_text}}</view>
+          <view class="row-sub hint" wx:if="{{item.status_text === '待收款确认'}}">请打开微信「微信支付」转账消息，点击「确认收款」完成到账</view>
+          <view class="row-sub hint" wx:if="{{item.balance_refunded}}">金额已退回可提现余额，可重新申请提现</view>
           <view class="row-sub" wx:if="{{item.fail_reason}}">失败原因：{{item.fail_reason}}</view>
         </view>
         <view class="row-sub" wx:if="{{item.paid_time}}">到账 {{item.paid_time}}</view>

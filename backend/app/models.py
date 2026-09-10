@@ -167,7 +167,8 @@ class Withdrawal(db.Model):
     transfer_status = db.Column(db.String(20))  # 微信侧单据状态镜像
     transfer_time = db.Column(db.DateTime)  # 转账终态时间（SUCCESS/FAIL 时写）
     fail_reason = db.Column(db.String(255))  # 最终失败原因
-    retry_count = db.Column(db.Integer, nullable=False, default=0)  # 因 FAIL 换单重试次数
+    retry_count = db.Column(db.Integer, nullable=False, default=0)  # 因 FAIL/CANCELLED 换单重试次数
+    balance_refunded = db.Column(db.Boolean, nullable=False, default=False)  # CANCELLED 重试耗尽后余额已退回用户
     apply_time = db.Column(db.DateTime, default=datetime.utcnow)
     paid_time = db.Column(db.DateTime)
 

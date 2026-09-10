@@ -113,6 +113,9 @@
   color: #999;
   margin-top: 6rpx;
 }
+.row-sub.hint {
+  color: #2f6fed;
+}
 .row-amount {
   font-size: 32rpx;
   font-weight: 600;

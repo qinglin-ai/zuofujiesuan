@@ -8,6 +8,7 @@ const WD_TRANSFER_TEXT = {
   PROCESSING: '转账中',
   SUCCESS: '已到账',
   FAIL: '转账失败',
+  CANCELLED: '已取消',
 }
 
 Page({
@@ -47,9 +48,13 @@ Page({
         : ''
       const withdrawals = wds.map((w) => {
         let status_text = WD_STATUS[w.status] || w.status
-        // 转账中细化展示（待收款确认需用户在小程序内确认收款）
+        // 转账中细化展示：待收款确认 = 转账已发起、需用户在微信「微信支付」转账消息中点击确认收款（非本小程序内操作）
         if (w.status === 'pending' && w.transfer_status && WD_TRANSFER_TEXT[w.transfer_status]) {
           status_text = WD_TRANSFER_TEXT[w.transfer_status]
+        }
+        // CANCELLED 换单重试耗尽：余额已退回可提现余额
+        if (w.status === 'rejected' && w.balance_refunded) {
+          status_text = '已取消（余额已退回）'
         }
         return { ...w, status_text, fail_reason: w.fail_reason || '' }
       })

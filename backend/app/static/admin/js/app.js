@@ -496,6 +496,7 @@ async function renderWithdrawals() {
     const transfer = w.transfer_status
       ? (WD_TRANSFER_LABEL[w.transfer_status] || w.transfer_status)
       : (w.status === 'paid' ? '—' : '未发起')
+    const refundTxt = w.balance_refunded ? `<div style="color:#1a7f37">余额已退回用户</div>` : ''
     const failTxt = w.fail_reason ? `<div style="color:#e54d42">${esc(w.fail_reason)}</div>` : ''
     let ops
     if (w.status === 'pending') {
@@ -515,7 +516,7 @@ async function renderWithdrawals() {
       <td><span class="tag ${w.status}">${WD_STATUS_LABEL[w.status] || w.status}</span></td>
       <td>${w.apply_time ? new Date(w.apply_time).toLocaleString() : '-'}</td>
       <td>${w.paid_time ? new Date(w.paid_time).toLocaleString() : '-'}</td>
-      <td>${transfer}${failTxt}</td>
+      <td>${transfer}${failTxt}${refundTxt}</td>
       <td class="ops">${ops}</td>
     </tr>`
   }).join('')
