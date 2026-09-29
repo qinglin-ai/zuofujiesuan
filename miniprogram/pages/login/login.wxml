@@ -3,6 +3,10 @@
     <text class="brand-title">左辅云创</text>
     <text class="brand-sub">兼职人员管理平台</text>
   </view>
-  <button class="login-btn" bindtap="onLogin" loading="{{loading}}">微信一键登录</button>
+  <button class="login-btn" bindtap="onLogin" loading="{{loading}}" disabled="{{!agreed}}">微信一键登录</button>
+  <view class="agree-row" bindtap="toggleAgree">
+    <view class="checkbox {{agreed ? 'on' : ''}}">{{agreed ? '✓' : ''}}</view>
+    <view class="agree-text">我已阅读并同意<text class="link" catchtap="goAgreement">《用户服务协议》</text>与<text class="link" catchtap="goPrivacy">《隐私政策》</text></view>
+  </view>
   <view class="tip" wx:if="{{error}}">{{error}}</view>
 </view>

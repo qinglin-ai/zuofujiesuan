@@ -60,6 +60,21 @@
   border-radius: 16rpx;
   padding: 32rpx;
 }
+.links {
+  background: #fff;
+  border-radius: 16rpx;
+  margin-bottom: 40rpx;
+  overflow: hidden;
+}
+.link-item {
+  padding: 28rpx 32rpx;
+  font-size: 28rpx;
+  color: #333;
+  border-bottom: 1rpx solid #f0f1f3;
+}
+.link-item:last-child {
+  border-bottom: none;
+}
 .dev-title {
   font-size: 28rpx;
   font-weight: 600;

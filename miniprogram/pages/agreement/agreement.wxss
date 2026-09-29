@@ -1,0 +1,27 @@
+.page {
+  padding: 32rpx 28rpx 60rpx;
+  background: #fff;
+  min-height: 100vh;
+}
+.title {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #222;
+}
+.meta {
+  font-size: 24rpx;
+  color: #999;
+  margin: 12rpx 0 28rpx;
+}
+.h {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #222;
+  margin: 32rpx 0 12rpx;
+}
+.p {
+  font-size: 28rpx;
+  color: #444;
+  line-height: 1.75;
+  margin-bottom: 8rpx;
+}

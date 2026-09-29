@@ -3,8 +3,8 @@
 资金安全要点，全部遵循《技术机制预研.md》：
 - T4-1 佣金入账：佣金写 commissions + 余额加 balances.available_balance，同一事务内完成；
   commissions.assignment_id 唯一索引保证幂等（即使并发重复触发也只入账一次）。
-- T4-2 提现申请：校验 amount <= available_balance 且已绑卡，事务内「扣余额 + 写提现记录」，免二次审核；
-  提交后同步调用微信「商家转账到零钱」自动打款（T4-6）。
+- T4-2 提现申请：校验 amount <= available_balance、已绑卡（含协议授权）且未超每日申请次数上限，
+  事务内「扣余额 + 写提现记录」，免二次审核；提交后同步调用微信「商家转账到零钱」自动打款（T4-6）。
 - T4-3 提现回写：微信异步回调收口（成功置 paid）；FAIL/CANCELLED 自动换单重试一次：
   FAIL 重试耗尽置 rejected 转人工（余额不退，可「补发」）；CANCELLED（转账未确认被取消）重试耗尽置 rejected 并退回余额。
   财务仍可手动确认到账（manual 兜底）。
@@ -36,6 +36,43 @@ from ..wxpay.transfer import (
 bp = Blueprint("wallet", __name__)
 
 PAID_SOURCES = ("auto", "manual")
+
+# 提现规则按北京时间（Asia/Shanghai）计算「今日」，DB 中 apply_time 存 UTC naive
+TZ_OFFSET = timedelta(hours=8)
+
+
+def _today_bounds_utc():
+    """返回「北京时间今日」对应的 UTC 起止（含头不含尾），用于每日提现次数统计。"""
+    local_start = (datetime.utcnow() + TZ_OFFSET).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
+    start_utc = local_start - TZ_OFFSET
+    return start_utc, start_utc + timedelta(days=1)
+
+
+def _today_withdraw_count(openid):
+    """统计该用户今日（北京时间）已提交的提现申请数（含被拒绝/取消的单，防止刷单）。"""
+    start_utc, end_utc = _today_bounds_utc()
+    return db.session.execute(
+        db.select(db.func.count())
+        .select_from(Withdrawal)
+        .where(
+            Withdrawal.openid == openid,
+            Withdrawal.apply_time >= start_utc,
+            Withdrawal.apply_time < end_utc,
+        )
+    ).scalar() or 0
+
+
+def withdraw_rule_view(openid):
+    """提现规则（供小程序展示，字段口径与实际校验一致）。"""
+    limit = max(int(current_app.config.get("WITHDRAW_DAILY_MAX", 1)), 1)
+    used = int(_today_withdraw_count(openid))
+    return {
+        "daily_limit": limit,
+        "today_used": used,
+        "today_remaining": max(limit - used, 0),
+    }
 
 
 def _to_decimal(value):
@@ -147,6 +184,7 @@ def my_balance():
             "total_withdrawn": str(total_withdrawn),
             "bank_info": g.user.bank_info,
             "has_bank": bool(g.user.bank_info and g.user.bank_info.get("cardNo")),
+            "withdraw_rule": withdraw_rule_view(g.openid),
         },
     }
 
@@ -154,8 +192,17 @@ def my_balance():
 @bp.post("/bank")
 @login_required
 def bind_bank():
-    """兼职端：绑定/更新收款账户（A5，提现前置条件）。body: {bankName, cardNo, cardHolder}"""
+    """兼职端：绑定/更新收款账户（A5，提现前置条件）。body: {bankName, cardNo, cardHolder, agree}
+
+    `agree=true` 表示用户已阅读并同意《用户服务协议》《隐私政策》并授权收集使用收款账户信息，
+    未授权时拒绝写入（合规要求：先取得授权再收集用户信息）。
+    """
     body = request.get_json(silent=True) or {}
+    if body.get("agree") is not True:
+        return {
+            "code": 400,
+            "message": "请先阅读并同意《用户服务协议》和《隐私政策》，并授权收集使用收款账户信息",
+        }, 400
     bank_name = (body.get("bankName") or body.get("bank_name") or "").strip()
     card_no = (body.get("cardNo") or body.get("card_no") or "").strip()
     card_holder = (body.get("cardHolder") or body.get("card_holder") or "").strip()
@@ -428,6 +475,14 @@ def apply_withdrawal():
     bank = g.user.bank_info
     if not (bank and bank.get("cardNo")):
         return {"code": 400, "message": "请先绑定收款账户"}, 400
+
+    # 提现规则：每日提现申请次数上限（提现页已对用户明示）
+    rule = withdraw_rule_view(g.openid)
+    if rule["today_remaining"] <= 0:
+        return {
+            "code": 400,
+            "message": f"今日提现次数已用完（每日最多 {rule['daily_limit']} 次），请次日再申请",
+        }, 400
 
     balance = _get_or_create_balance(g.openid)
     if _to_decimal(balance.available_balance or 0) < amount:

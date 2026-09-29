@@ -31,3 +31,33 @@
   color: #e64340;
   font-size: 26rpx;
 }
+.agree-row {
+  display: flex;
+  align-items: flex-start;
+  margin-top: 24rpx;
+}
+.checkbox {
+  width: 32rpx;
+  height: 32rpx;
+  flex-shrink: 0;
+  margin: 4rpx 12rpx 0 0;
+  border: 1rpx solid #c9cdd4;
+  border-radius: 6rpx;
+  color: #fff;
+  font-size: 24rpx;
+  line-height: 32rpx;
+  text-align: center;
+}
+.checkbox.on {
+  background: #07c160;
+  border-color: #07c160;
+}
+.agree-text {
+  flex: 1;
+  font-size: 24rpx;
+  color: #888;
+  line-height: 1.6;
+}
+.agree-text .link {
+  color: #1989fa;
+}

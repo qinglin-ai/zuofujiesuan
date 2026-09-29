@@ -16,7 +16,9 @@ Page({
     loading: true,
     error: '',
     info: { available_balance: '0', total_income: '0', total_withdrawn: '0', has_bank: false, bank_info: null, bank_tail: '' },
+    rule: { daily_limit: 1, today_used: 0, today_remaining: 1 },
     bank: { bankName: '', cardNo: '', cardHolder: '' },
+    agreed: false,
     withdrawAmount: '',
     canWithdraw: false,
     activeTab: 'commission',
@@ -58,12 +60,14 @@ Page({
         }
         return { ...w, status_text, fail_reason: w.fail_reason || '' }
       })
+      const rule = info.withdraw_rule || { daily_limit: 1, today_used: 0, today_remaining: 1 }
       this.setData({
         info: { ...info, bank_tail },
+        rule,
         commissions,
         withdrawals,
         bank: { bankName: bank.bankName || '', cardNo: bank.cardNo || '', cardHolder: bank.cardHolder || '' },
-        canWithdraw: info.has_bank && Number(info.available_balance) > 0,
+        canWithdraw: info.has_bank && Number(info.available_balance) > 0 && rule.today_remaining > 0,
         loading: false,
       })
     } catch (e) {
@@ -80,14 +84,31 @@ Page({
     this.setData({ ['bank.' + key]: e.detail.value })
   },
 
+  toggleAgree() {
+    this.setData({ agreed: !this.data.agreed })
+  },
+
+  goAgreement() {
+    wx.navigateTo({ url: '/pages/agreement/agreement' })
+  },
+
+  goPrivacy() {
+    wx.navigateTo({ url: '/pages/privacy/privacy' })
+  },
+
   async onBindBank() {
     const { bankName, cardNo, cardHolder } = this.data.bank
     if (!bankName || !cardNo || !cardHolder) {
       wx.showToast({ title: '请填写完整开户行/卡号/持卡人', icon: 'none' })
       return
     }
+    // 合规要求：先取得用户对《用户服务协议》《隐私政策》的授权同意，再收集收款账户信息
+    if (!this.data.agreed) {
+      wx.showToast({ title: '请先阅读并同意协议与隐私政策', icon: 'none' })
+      return
+    }
     try {
-      await request.post('/api/wallet/bank', this.data.bank)
+      await request.post('/api/wallet/bank', { ...this.data.bank, agree: true })
       wx.showToast({ title: '绑定成功', icon: 'success' })
       this._load()
     } catch (err) {
@@ -106,7 +127,11 @@ Page({
       return
     }
     if (amount > Number(this.data.info.available_balance)) {
-      wx.showToast({ title: '余额不足', icon: 'none' })
+      wx.showToast({ title: '超出可提现额度', icon: 'none' })
+      return
+    }
+    if (this.data.rule.today_remaining <= 0) {
+      wx.showToast({ title: `今日提现次数已用完（每日最多 ${this.data.rule.daily_limit} 次）`, icon: 'none' })
       return
     }
     const res = await wx.showModal({ title: '确认提现', content: `申请提现 ￥${amount}？`, confirmColor: '#1989fa' })

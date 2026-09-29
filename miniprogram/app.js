@@ -3,7 +3,7 @@ const tokenManager = require('./utils/token')
 App({
   globalData: {
     userInfo: null,
-    backendBaseUrl: 'http://127.0.0.1:5000' // TODO: 生产替换为 HTTPS 域名
+    backendBaseUrl: 'https://jiesuan.zuofu.info' // TODO: 生产替换为 HTTPS 域名
   },
 
   onLaunch() {

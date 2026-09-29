@@ -140,3 +140,49 @@
   color: #c5221f;
   background: #fce8e6;
 }
+.rule-item {
+  display: flex;
+  margin-bottom: 14rpx;
+}
+.rule-label {
+  width: 168rpx;
+  flex-shrink: 0;
+  font-size: 26rpx;
+  color: #666;
+}
+.rule-value {
+  flex: 1;
+  font-size: 26rpx;
+  color: #333;
+  line-height: 1.6;
+}
+.agree-row {
+  display: flex;
+  align-items: flex-start;
+  margin: 4rpx 0 16rpx;
+}
+.checkbox {
+  width: 32rpx;
+  height: 32rpx;
+  flex-shrink: 0;
+  margin: 4rpx 12rpx 0 0;
+  border: 1rpx solid #c9cdd4;
+  border-radius: 6rpx;
+  color: #fff;
+  font-size: 24rpx;
+  line-height: 32rpx;
+  text-align: center;
+}
+.checkbox.on {
+  background: #1989fa;
+  border-color: #1989fa;
+}
+.agree-text {
+  flex: 1;
+  font-size: 24rpx;
+  color: #666;
+  line-height: 1.6;
+}
+.agree-text .link {
+  color: #1989fa;
+}

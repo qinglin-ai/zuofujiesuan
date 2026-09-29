@@ -13,15 +13,44 @@
       </view>
     </view>
 
+    <!-- 提现规则：审核要求，需在提现页清晰展示 -->
+    <view class="card">
+      <view class="card-title">提现规则</view>
+      <view class="rule-item">
+        <view class="rule-label">可提现额度</view>
+        <view class="rule-value">以当前可提现余额为上限（当前 ￥{{info.available_balance}}），单笔提现金额需大于 0 且不超过可提现余额</view>
+      </view>
+      <view class="rule-item">
+        <view class="rule-label">每日提现次数</view>
+        <view class="rule-value">每日（北京时间自然日）最多 {{rule.daily_limit}} 次；今日已申请 {{rule.today_used}} 次，剩余 {{rule.today_remaining}} 次</view>
+      </view>
+      <view class="rule-item">
+        <view class="rule-label">提现时间</view>
+        <view class="rule-value">7×24 小时均可提交提现申请</view>
+      </view>
+      <view class="rule-item">
+        <view class="rule-label">到账时间</view>
+        <view class="rule-value">提交后经微信「商家转账到零钱」发放，请在微信「微信支付」转账消息中点击「确认收款」，确认后实时到账微信零钱；超时未确认将自动取消，金额退回可提现余额</view>
+      </view>
+      <view class="rule-item">
+        <view class="rule-label">手续费</view>
+        <view class="rule-value">提现不收取手续费</view>
+      </view>
+    </view>
+
     <!-- 提现申请 -->
     <view class="card">
       <view class="card-title">申请提现</view>
       <view wx:if="{{!info.has_bank}}" class="bank-form">
-        <view class="form-tip">提现前请先绑定收款银行卡</view>
+        <view class="form-tip">提现前请先绑定收款银行卡。开户行、银行卡号、持卡人姓名仅用于向你支付兼职佣金</view>
         <input class="ipt" placeholder="开户行" value="{{bank.bankName}}" bindinput="onBankInput" data-key="bankName" />
         <input class="ipt" placeholder="银行卡号" value="{{bank.cardNo}}" bindinput="onBankInput" data-key="cardNo" />
         <input class="ipt" placeholder="持卡人姓名" value="{{bank.cardHolder}}" bindinput="onBankInput" data-key="cardHolder" />
-        <button type="primary" size="mini" bindtap="onBindBank">绑定银行卡</button>
+        <view class="agree-row" bindtap="toggleAgree">
+          <view class="checkbox {{agreed ? 'on' : ''}}">{{agreed ? '✓' : ''}}</view>
+          <view class="agree-text">我已阅读并同意<text class="link" catchtap="goAgreement">《用户服务协议》</text>与<text class="link" catchtap="goPrivacy">《隐私政策》</text>，并授权平台为发放佣金之目的收集、使用、存储我的开户行、银行卡号与持卡人姓名</view>
+        </view>
+        <button type="primary" size="mini" bindtap="onBindBank" disabled="{{!agreed}}">绑定银行卡</button>
       </view>
       <view wx:else class="withdraw-form">
         <view class="bank-info">{{info.bank_tail}}</view>
@@ -30,7 +59,8 @@
           <input class="amount-ipt" type="digit" placeholder="请输入提现金额" value="{{withdrawAmount}}" bindinput="onAmountInput" />
           <button type="primary" size="mini" bindtap="onWithdraw" disabled="{{!canWithdraw}}">提现</button>
         </view>
-        <view class="form-tip">提现免审核，申请成功后扣减可提现余额，到账由系统回写</view>
+        <view class="form-tip">可提现额度 ￥{{info.available_balance}}；今日剩余提现次数 {{rule.today_remaining}} 次；提现不收取手续费</view>
+        <view class="form-tip">提现免审核，申请成功后扣减可提现余额；到账需在微信「微信支付」转账消息中点击「确认收款」</view>
       </view>
     </view>
 

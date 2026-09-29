@@ -7,7 +7,9 @@
     "pages/my-tasks/my-tasks",
     "pages/wallet/wallet",
     "pages/notices/notices",
-    "pages/certify/certify"
+    "pages/certify/certify",
+    "pages/agreement/agreement",
+    "pages/privacy/privacy"
   ],
   "window": {
     "backgroundTextStyle": "light",

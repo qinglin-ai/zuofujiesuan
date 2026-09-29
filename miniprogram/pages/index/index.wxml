@@ -10,6 +10,12 @@
     </view>
   </view>
 
+  <!-- 协议与隐私入口：供用户随时查阅与撤回同意 -->
+  <view class="links">
+    <view class="link-item" bindtap="goAgreement">用户服务协议</view>
+    <view class="link-item" bindtap="goPrivacy">隐私政策</view>
+  </view>
+
   <!-- 开发环境诊断：仅开发版显示，正式版不展示 -->
   <view class="dev" wx:if="{{devMode}}">
     <view class="dev-title">开发环境诊断</view>

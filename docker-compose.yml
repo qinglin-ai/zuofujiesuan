@@ -25,7 +25,7 @@ services:
       - "3306:3306"
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
-      interval: 5s
+      interval: 15s
       timeout: 3s
       retries: 20
 
@@ -58,6 +58,8 @@ services:
       WXPAY_RETRY_MAX: ${WXPAY_RETRY_MAX:-1}
       WXPAY_HTTP_TIMEOUT: ${WXPAY_HTTP_TIMEOUT:-10}
       WXPAY_MOCK: ${WXPAY_MOCK:-0}
+      # 提现规则：每日最多提现申请次数
+      WITHDRAW_DAILY_MAX: ${WITHDRAW_DAILY_MAX:-1}
     volumes:
       - ./backend/certs:/app/certs:ro
     ports:

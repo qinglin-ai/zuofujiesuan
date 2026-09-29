@@ -50,3 +50,6 @@ class Config:
     )
     WXPAY_RETRY_MAX = int(os.environ.get("WXPAY_RETRY_MAX", "1"))
     WXPAY_HTTP_TIMEOUT = int(os.environ.get("WXPAY_HTTP_TIMEOUT", "10"))
+
+    # 提现规则（对用户展示，申请提现时强制校验）
+    WITHDRAW_DAILY_MAX = int(os.environ.get("WITHDRAW_DAILY_MAX", "1"))  # 每日最多提现申请次数

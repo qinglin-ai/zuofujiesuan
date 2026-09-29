@@ -2,9 +2,26 @@ const request = require('../../utils/request')
 const tokenManager = require('../../utils/token')
 
 Page({
-  data: { loading: false, error: '' },
+  data: { loading: false, error: '', agreed: false },
+
+  toggleAgree() {
+    this.setData({ agreed: !this.data.agreed })
+  },
+
+  goAgreement() {
+    wx.navigateTo({ url: '/pages/agreement/agreement' })
+  },
+
+  goPrivacy() {
+    wx.navigateTo({ url: '/pages/privacy/privacy' })
+  },
 
   async onLogin() {
+    // 合规要求：登录（获取 openid）前需用户同意《用户服务协议》《隐私政策》
+    if (!this.data.agreed) {
+      wx.showToast({ title: '请先阅读并同意协议与隐私政策', icon: 'none' })
+      return
+    }
     this.setData({ loading: true, error: '' })
     try {
       // 微信登录获取 code
