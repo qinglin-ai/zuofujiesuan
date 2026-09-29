@@ -2,7 +2,7 @@
 import os
 
 from dotenv import load_dotenv
-from flask import Flask
+from flask import Flask, send_from_directory
 
 from .extensions import db
 from .config import Config
@@ -49,5 +49,18 @@ def create_app(config_object=None):
     @app.get("/admin")
     def admin_index():
         return app.send_static_file("admin/index.html")
+
+    # 管理后台静态资源：挂在 /admin/static/ 下，确保线上既有 Nginx 反代可达
+    # （Nginx 只把 /api/、/admin 前缀转到本项目后端；默认的 /static/* 会被既有 Next.js 上游吞掉返回 404）
+    @app.get("/admin/static/<path:filename>")
+    def admin_static(filename):
+        return send_from_directory(os.path.join(app.static_folder, "admin"), filename)
+
+    # 用户头像回吐：同样挂在 /api/ 前缀下
+    @app.get("/api/uploads/avatars/<path:filename>")
+    def uploads_avatar(filename):
+        return send_from_directory(
+            os.path.join(app.config["UPLOAD_ROOT"], "avatars"), filename
+        )
 
     return app

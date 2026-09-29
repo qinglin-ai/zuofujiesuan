@@ -4,26 +4,41 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>左辅云创 · 管理后台</title>
-  <link rel="stylesheet" href="/static/admin/css/admin.css">
+  <link rel="stylesheet" href="/admin/static/css/admin.css">
 </head>
 <body>
   <!-- 登录视图 -->
   <div id="login-view" class="login-view">
     <form id="login-form" class="login-card">
-      <h1>左辅云创 · 管理后台</h1>
-      <input id="login-account" placeholder="管理员账号" autocomplete="username">
-      <input id="login-password" type="password" placeholder="密码" autocomplete="current-password">
-      <button type="submit">登 录</button>
+      <div class="login-head">
+        <h1>左辅云创</h1>
+        <p class="login-sub">兼职作业与佣金结算 · 管理后台</p>
+      </div>
+
+      <div class="login-field">
+        <label for="login-account">管理员账号</label>
+        <input id="login-account" name="username" type="text" placeholder="手机号或姓名" autocomplete="username" required>
+      </div>
+
+      <div class="login-field">
+        <label for="login-password">密码</label>
+        <input id="login-password" name="password" type="password" placeholder="请输入登录密码" autocomplete="current-password" required>
+      </div>
+
       <p id="login-error" class="error hidden"></p>
+
+      <button type="submit" class="login-submit">登 录</button>
+
       <p class="hint">
-        提示：先用小程序登录建档，再执行
-        <code>python -m flask seed-admin</code> 设置管理员账号密码。
+        首次登录：需先用小程序登录建档，再由运维执行
+        <code>flask seed-admin</code> 初始化管理员账号密码。
       </p>
     </form>
+    
   </div>
 
   <!-- 主面板 -->
-  <div id="app-view" class="app-view hidden">
+  <!-- <div id="app-view" class="app-view hidden">
     <aside class="sidebar">
       <div class="brand">左辅云创</div>
       <nav>
@@ -42,10 +57,10 @@
       </div>
     </aside>
     <main id="page-content" class="page-content"></main>
-  </div>
+  </div> -->
 
   <div id="toast" class="toast hidden"></div>
 
-  <script src="/static/admin/js/app.js"></script>
+  <script src="/admin/static/js/app.js"></script>
 </body>
 </html>

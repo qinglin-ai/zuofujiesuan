@@ -53,3 +53,9 @@ class Config:
 
     # 提现规则（对用户展示，申请提现时强制校验）
     WITHDRAW_DAILY_MAX = int(os.environ.get("WITHDRAW_DAILY_MAX", "1"))  # 每日最多提现申请次数
+
+    # 本地上传目录（用户头像等），默认 backend/uploads，容器内为 /app/uploads
+    UPLOAD_ROOT = os.environ.get(
+        "UPLOAD_ROOT",
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "uploads"),
+    )
