@@ -65,6 +65,8 @@ services:
       WITHDRAW_DAILY_MAX: ${WITHDRAW_DAILY_MAX:-1}
     volumes:
       - ./backend/certs:/app/certs:ro
+      # 用户上传目录（头像等）持久化到宿主，避免容器重建后丢失
+      - ./backend/uploads:/app/uploads
     ports:
       # 绑定到 docker0 网关 IP（172.18.0.1:5001->容器 5000）。
       # aiscan-frontend 里的 host.docker.internal 实际解析到 172.18.0.1，nginx 通过它转发访问；

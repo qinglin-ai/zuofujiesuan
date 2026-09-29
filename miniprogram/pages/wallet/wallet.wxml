@@ -42,15 +42,8 @@
     <view class="card">
       <view class="card-title">申请提现</view>
       <view wx:if="{{!info.has_bank}}" class="bank-form">
-        <view class="form-tip">提现前请先绑定收款银行卡。开户行、银行卡号、持卡人姓名仅用于向你支付兼职佣金</view>
-        <input class="ipt" placeholder="开户行" value="{{bank.bankName}}" bindinput="onBankInput" data-key="bankName" />
-        <input class="ipt" placeholder="银行卡号" value="{{bank.cardNo}}" bindinput="onBankInput" data-key="cardNo" />
-        <input class="ipt" placeholder="持卡人姓名" value="{{bank.cardHolder}}" bindinput="onBankInput" data-key="cardHolder" />
-        <view class="agree-row" bindtap="toggleAgree">
-          <view class="checkbox {{agreed ? 'on' : ''}}">{{agreed ? '✓' : ''}}</view>
-          <view class="agree-text">我已阅读并同意<text class="link" catchtap="goAgreement">《用户服务协议》</text>与<text class="link" catchtap="goPrivacy">《隐私政策》</text>，并授权平台为发放佣金之目的收集、使用、存储我的开户行、银行卡号与持卡人姓名</view>
-        </view>
-        <button type="primary" size="mini" bindtap="onBindBank" disabled="{{!agreed}}">绑定银行卡</button>
+        <view class="form-tip">提现前请先在「用户」页绑定收款银行卡（开户行、银行卡号、持卡人姓名仅用于向你支付兼职佣金）</view>
+        <button type="primary" size="mini" bindtap="goBindBank">去绑定银行卡</button>
       </view>
       <view wx:else class="withdraw-form">
         <view class="bank-info">{{info.bank_tail}}</view>

@@ -1,20 +1,98 @@
 <view class="page">
   <view class="header">左辅云创 · 兼职小程序</view>
 
-  <view class="profile">
-    <view class="status {{logged ? 'on' : ''}}">{{logged ? '已登录' : '未登录'}}</view>
-    <button wx:if="{{!logged}}" class="main-btn" bindtap="goLogin">去登录</button>
-    <view wx:else class="actions">
-      <button class="main-btn cert" bindtap="goCertify">能力认证</button>
-      <button class="main-btn plain" bindtap="onLogout">退出登录</button>
-    </view>
+  <!-- 未登录：引导登录 -->
+  <view wx:if="{{!logged}}" class="profile">
+    <view class="status">未登录</view>
+    <button class="main-btn" bindtap="goLogin">去登录</button>
   </view>
+
+  <block wx:else>
+    <!-- 我的账号：头像 + 实名信息绑定（手机号 / 真实姓名 / 昵称） -->
+    <view class="card">
+      <view class="card-title">我的账号</view>
+      <view class="avatar-row">
+        <image wx:if="{{avatarUrl}}" class="avatar" src="{{avatarUrl}}" mode="aspectFill" />
+        <view wx:else class="avatar avatar-empty">{{avatarChar}}</view>
+        <view class="avatar-side">
+          <view class="avatar-name">{{user.nickname || user.real_name || '未设置昵称'}}</view>
+          <button class="mini-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">设置头像</button>
+        </view>
+        <view class="tag tag-{{user.approval_status}}">{{approvalText}}</view>
+      </view>
+
+      <!-- 已绑定：只读展示（手机号脱敏） -->
+      <block wx:if="{{bound}}">
+        <view class="kv">
+          <view class="kv-label">手机号</view>
+          <view class="kv-value">{{maskPhone}}</view>
+        </view>
+        <view class="kv">
+          <view class="kv-label">真实姓名</view>
+          <view class="kv-value">{{user.real_name}}</view>
+        </view>
+        <view class="kv">
+          <view class="kv-label">昵称</view>
+          <view class="kv-value">{{user.nickname || '未设置'}}</view>
+        </view>
+        <view wx:if="{{user.approval_status === 'rejected'}}" class="form-tip warn">资料未通过审批，请核对手机号与真实姓名后重新提交</view>
+        <view wx:else class="form-tip">实名信息已提交，审批通过后不可自行修改；如需变更请联系管理员</view>
+      </block>
+
+      <!-- 未绑定 / 被驳回：可提交实名信息 -->
+      <block wx:if="{{canEditProfile}}">
+        <view class="form-tip">手机号与真实姓名仅用于佣金结算与身份核验，请填写本人真实信息</view>
+        <input class="ipt" type="nickname" placeholder="昵称（选填）" value="{{form.nickname}}" bindinput="onFormInput" data-key="nickname" />
+        <input class="ipt" type="number" maxlength="11" placeholder="手机号" value="{{form.phone}}" bindinput="onFormInput" data-key="phone" />
+        <input class="ipt" placeholder="真实姓名" value="{{form.real_name}}" bindinput="onFormInput" data-key="real_name" />
+        <view class="agree-row" bindtap="toggleAgree">
+          <view class="checkbox {{agreed ? 'on' : ''}}">{{agreed ? '✓' : ''}}</view>
+          <view class="agree-text">我已阅读并同意<text class="link" catchtap="goAgreement">《用户服务协议》</text>与<text class="link" catchtap="goPrivacy">《隐私政策》</text>，并授权平台为佣金结算之目的收集、使用、存储我的手机号与真实姓名</view>
+        </view>
+        <button class="main-btn" bindtap="onBindProfile" disabled="{{!agreed}}">提交绑定</button>
+      </block>
+    </view>
+
+    <!-- 收款银行卡：提现前置条件，从「我的资金」页迁入统一维护 -->
+    <view class="card">
+      <view class="card-title">收款银行卡</view>
+      <block wx:if="{{hasBank && !showBankForm}}">
+        <view class="kv">
+          <view class="kv-label">收款账户</view>
+          <view class="kv-value">{{bankTail}}</view>
+        </view>
+        <view class="form-tip">佣金提现将转入该账户，请确保持卡人与实名信息一致</view>
+        <button class="mini-btn" bindtap="onShowBankForm">更换银行卡</button>
+      </block>
+      <block wx:else>
+        <view class="form-tip">开户行、银行卡号、持卡人姓名仅用于向你支付兼职佣金，请确保持卡人与实名信息一致</view>
+        <input class="ipt" placeholder="开户行" value="{{bank.bankName}}" bindinput="onBankInput" data-key="bankName" />
+        <input class="ipt" type="number" placeholder="银行卡号" value="{{bank.cardNo}}" bindinput="onBankInput" data-key="cardNo" />
+        <input class="ipt" placeholder="持卡人姓名" value="{{bank.cardHolder}}" bindinput="onBankInput" data-key="cardHolder" />
+        <view class="agree-row" bindtap="toggleAgreeBank">
+          <view class="checkbox {{agreedBank ? 'on' : ''}}">{{agreedBank ? '✓' : ''}}</view>
+          <view class="agree-text">我已阅读并同意<text class="link" catchtap="goAgreement">《用户服务协议》</text>与<text class="link" catchtap="goPrivacy">《隐私政策》</text>，并授权平台为发放佣金之目的收集、使用、存储我的开户行、银行卡号与持卡人姓名</view>
+        </view>
+        <button class="main-btn" bindtap="onBindBank" disabled="{{!agreedBank}}">绑定银行卡</button>
+      </block>
+    </view>
+
+    <!-- 能力认证 -->
+    <view class="profile">
+      <view class="status on">已登录</view>
+      <view class="actions">
+        <button class="main-btn cert" bindtap="goCertify">能力认证</button>
+      </view>
+    </view>
+  </block>
 
   <!-- 协议与隐私入口：供用户随时查阅与撤回同意 -->
   <view class="links">
     <view class="link-item" bindtap="goAgreement">用户服务协议</view>
     <view class="link-item" bindtap="goPrivacy">隐私政策</view>
   </view>
+
+  <button wx:if="{{logged}}" class="main-btn plain" bindtap="onLogout">退出登录</button>
 
   <!-- 开发环境诊断：仅开发版显示，正式版不展示 -->
   <view class="dev" wx:if="{{devMode}}">

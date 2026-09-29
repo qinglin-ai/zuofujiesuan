@@ -29,3 +29,7 @@ miniprogram/**/node_modules/
 # 微信支付证书/私钥（敏感，不入库；仅保留目录占位）
 backend/certs/*
 !backend/certs/.gitkeep
+
+# 用户上传文件（头像等，运行期数据不入库；仅保留目录占位）
+backend/uploads/avatars/*
+!backend/uploads/avatars/.gitkeep

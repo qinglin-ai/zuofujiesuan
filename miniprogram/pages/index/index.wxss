@@ -8,13 +8,185 @@
   font-size: 38rpx;
   font-weight: 600;
   text-align: center;
-  margin-bottom: 60rpx;
+  margin-bottom: 40rpx;
 }
+
+/* 通用卡片 */
+.card {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+}
+.card-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 24rpx;
+}
+
+/* 头像 */
+.avatar-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 24rpx;
+}
+.avatar {
+  width: 108rpx;
+  height: 108rpx;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #f2f3f5;
+}
+.avatar-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 44rpx;
+  color: #1989fa;
+}
+.avatar-side {
+  flex: 1;
+  margin-left: 24rpx;
+}
+.avatar-name {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12rpx;
+}
+
+/* 审批状态标签 */
+.tag {
+  font-size: 22rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 8rpx;
+  flex-shrink: 0;
+}
+.tag-pending {
+  color: #b06000;
+  background: #fef7e0;
+}
+.tag-approved {
+  color: #1a7f37;
+  background: #e6f4ea;
+}
+.tag-rejected {
+  color: #c5221f;
+  background: #fce8e6;
+}
+
+/* 只读信息行 */
+.kv {
+  display: flex;
+  align-items: center;
+  padding: 18rpx 0;
+  border-bottom: 1rpx solid #f0f1f3;
+}
+.kv:last-of-type {
+  border-bottom: none;
+}
+.kv-label {
+  width: 160rpx;
+  flex-shrink: 0;
+  font-size: 26rpx;
+  color: #999;
+}
+.kv-value {
+  flex: 1;
+  font-size: 28rpx;
+  color: #333;
+  word-break: break-all;
+}
+
+/* 表单 */
+.ipt {
+  border: 1rpx solid #e5e6eb;
+  border-radius: 8rpx;
+  padding: 16rpx 20rpx;
+  font-size: 28rpx;
+  margin-bottom: 16rpx;
+}
+.form-tip {
+  font-size: 24rpx;
+  color: #999;
+  line-height: 1.6;
+  margin-bottom: 16rpx;
+}
+.form-tip.warn {
+  color: #c5221f;
+}
+
+/* 协议勾选 */
+.agree-row {
+  display: flex;
+  align-items: flex-start;
+  margin: 4rpx 0 20rpx;
+}
+.checkbox {
+  width: 32rpx;
+  height: 32rpx;
+  flex-shrink: 0;
+  margin: 4rpx 12rpx 0 0;
+  border: 1rpx solid #c9cdd4;
+  border-radius: 6rpx;
+  color: #fff;
+  font-size: 24rpx;
+  line-height: 32rpx;
+  text-align: center;
+}
+.checkbox.on {
+  background: #1989fa;
+  border-color: #1989fa;
+}
+.agree-text {
+  flex: 1;
+  font-size: 24rpx;
+  color: #666;
+  line-height: 1.6;
+}
+.agree-text .link {
+  color: #1989fa;
+}
+
+/* 按钮 */
+.main-btn {
+  width: 100%;
+  border-radius: 44rpx;
+  background: #1989fa;
+  color: #fff;
+  font-size: 30rpx;
+}
+.mini-btn {
+  display: inline-block;
+  width: auto;
+  margin: 0;
+  padding: 0 24rpx;
+  font-size: 24rpx;
+  line-height: 56rpx;
+  border-radius: 28rpx;
+  background: #fff;
+  color: #1989fa;
+  border: 1rpx solid #1989fa;
+}
+.main-btn.plain {
+  background: #fff;
+  color: #d43c33;
+  border: 1rpx solid #d43c33;
+  margin-top: 8rpx;
+}
+.main-btn.cert {
+  background: #fff;
+  color: #1989fa;
+  border: 1rpx solid #1989fa;
+}
+
+/* 登录态 / 认证 */
 .profile {
   background: #fff;
   border-radius: 16rpx;
   padding: 40rpx;
-  margin-bottom: 40rpx;
+  margin-bottom: 24rpx;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -26,22 +198,6 @@
 }
 .status.on {
   color: #1aad19;
-}
-.main-btn {
-  width: 60%;
-  border-radius: 44rpx;
-  background: #1989fa;
-  color: #fff;
-}
-.main-btn.plain {
-  background: #fff;
-  color: #d43c33;
-  border: 1rpx solid #d43c33;
-}
-.main-btn.cert {
-  background: #fff;
-  color: #1989fa;
-  border: 1rpx solid #1989fa;
 }
 .actions {
   width: 100%;
@@ -55,15 +211,12 @@
 .actions .main-btn:last-child {
   margin-bottom: 0;
 }
-.dev {
-  background: #fff;
-  border-radius: 16rpx;
-  padding: 32rpx;
-}
+
+/* 协议入口 */
 .links {
   background: #fff;
   border-radius: 16rpx;
-  margin-bottom: 40rpx;
+  margin-bottom: 24rpx;
   overflow: hidden;
 }
 .link-item {
@@ -74,6 +227,13 @@
 }
 .link-item:last-child {
   border-bottom: none;
+}
+
+/* 开发环境诊断 */
+.dev {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 32rpx;
 }
 .dev-title {
   font-size: 28rpx;

@@ -17,8 +17,6 @@ Page({
     error: '',
     info: { available_balance: '0', total_income: '0', total_withdrawn: '0', has_bank: false, bank_info: null, bank_tail: '' },
     rule: { daily_limit: 1, today_used: 0, today_remaining: 1 },
-    bank: { bankName: '', cardNo: '', cardHolder: '' },
-    agreed: false,
     withdrawAmount: '',
     canWithdraw: false,
     activeTab: 'commission',
@@ -44,7 +42,6 @@ Page({
       const info = await request.get('/api/wallet/me')
       const commissions = await request.get('/api/wallet/commissions')
       const wds = await request.get('/api/wallet/withdrawals')
-      const bank = info.bank_info || { bankName: '', cardNo: '', cardHolder: '' }
       const bank_tail = info.bank_info && info.bank_info.cardNo
         ? `${info.bank_info.bankName || ''} ···${String(info.bank_info.cardNo).slice(-4)}（${info.bank_info.cardHolder || ''}）`
         : ''
@@ -66,7 +63,6 @@ Page({
         rule,
         commissions,
         withdrawals,
-        bank: { bankName: bank.bankName || '', cardNo: bank.cardNo || '', cardHolder: bank.cardHolder || '' },
         canWithdraw: info.has_bank && Number(info.available_balance) > 0 && rule.today_remaining > 0,
         loading: false,
       })
@@ -79,41 +75,9 @@ Page({
     this.setData({ activeTab: e.currentTarget.dataset.key })
   },
 
-  onBankInput(e) {
-    const key = e.currentTarget.dataset.key
-    this.setData({ ['bank.' + key]: e.detail.value })
-  },
-
-  toggleAgree() {
-    this.setData({ agreed: !this.data.agreed })
-  },
-
-  goAgreement() {
-    wx.navigateTo({ url: '/pages/agreement/agreement' })
-  },
-
-  goPrivacy() {
-    wx.navigateTo({ url: '/pages/privacy/privacy' })
-  },
-
-  async onBindBank() {
-    const { bankName, cardNo, cardHolder } = this.data.bank
-    if (!bankName || !cardNo || !cardHolder) {
-      wx.showToast({ title: '请填写完整开户行/卡号/持卡人', icon: 'none' })
-      return
-    }
-    // 合规要求：先取得用户对《用户服务协议》《隐私政策》的授权同意，再收集收款账户信息
-    if (!this.data.agreed) {
-      wx.showToast({ title: '请先阅读并同意协议与隐私政策', icon: 'none' })
-      return
-    }
-    try {
-      await request.post('/api/wallet/bank', { ...this.data.bank, agree: true })
-      wx.showToast({ title: '绑定成功', icon: 'success' })
-      this._load()
-    } catch (err) {
-      wx.showToast({ title: (err && err.message) || '绑定失败', icon: 'none' })
-    }
+  /** 绑卡已迁至「用户」页（tabBar 页，须用 switchTab） */
+  goBindBank() {
+    wx.switchTab({ url: '/pages/index/index' })
   },
 
   onAmountInput(e) {
