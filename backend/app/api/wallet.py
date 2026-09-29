@@ -15,6 +15,7 @@
 遇到 ALREADY_EXISTS / FREQUENCY_LIMIT_* / SYSTEM_ERROR 等错误码必须先查单，
 查单明确 FAIL 才允许生成新 out_bill_no 换单重试，否则有重复转账资金风险。
 """
+import re
 from datetime import datetime, date, timedelta
 from decimal import Decimal, InvalidOperation
 
@@ -36,6 +37,9 @@ from ..wxpay.transfer import (
 bp = Blueprint("wallet", __name__)
 
 PAID_SOURCES = ("auto", "manual")
+
+# 国内银行卡号：16~19 位数字（借记卡多为 16/17/19 位，信用卡 16 位）
+CARD_NO_RE = re.compile(r"^\d{16,19}$")
 
 # 提现规则按北京时间（Asia/Shanghai）计算「今日」，DB 中 apply_time 存 UTC naive
 TZ_OFFSET = timedelta(hours=8)
@@ -208,6 +212,8 @@ def bind_bank():
     card_holder = (body.get("cardHolder") or body.get("card_holder") or "").strip()
     if not bank_name or not card_no or not card_holder:
         return {"code": 400, "message": "开户行、卡号、持卡人姓名必填"}, 400
+    if not CARD_NO_RE.match(card_no):
+        return {"code": 400, "message": "银行卡号应为 16~19 位数字"}, 400
     g.user.bank_info = {"bankName": bank_name, "cardNo": card_no, "cardHolder": card_holder}
     db.session.commit()
     return {"code": 0, "data": g.user.bank_info}

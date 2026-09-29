@@ -1,5 +1,6 @@
 const request = require('../../utils/request')
 const tokenManager = require('../../utils/token')
+const { maskPhone, maskName } = require('../../utils/mask')
 
 const APPROVAL_TEXT = { pending: '待审批', approved: '已通过', rejected: '已驳回' }
 
@@ -21,6 +22,8 @@ Page({
     bound: false,
     canEditProfile: true,
     maskPhone: '',
+    maskName: '',
+    avatarName: '',
     approvalText: '',
     avatarUrl: '',
     avatarChar: '兼',
@@ -66,7 +69,9 @@ Page({
         bound,
         // 已审批通过后实名信息锁定，仅「被驳回」可重新提交
         canEditProfile: !bound || user.approval_status === 'rejected',
-        maskPhone: this._maskPhone(user.phone),
+        maskPhone: maskPhone(user.phone),
+        maskName: maskName(user.real_name),
+        avatarName: user.nickname || maskName(user.real_name) || '未设置昵称',
         approvalText: APPROVAL_TEXT[user.approval_status] || user.approval_status,
         avatarUrl: user.avatar
           ? (user.avatar.indexOf('http') === 0 ? user.avatar : baseUrl + user.avatar)
@@ -79,18 +84,13 @@ Page({
         },
         hasBank: !!(wallet && wallet.has_bank),
         bankTail: bank && bank.cardNo
-          ? `${bank.bankName || ''} ···${String(bank.cardNo).slice(-4)}（${bank.cardHolder || ''}）`
+          ? `${bank.bankName || ''} ···${String(bank.cardNo).slice(-4)}（${maskName(bank.cardHolder)}）`
           : ''
       })
     } catch (e) {
       // 401 时 request 已清 token
       this.setData({ logged: false, user: null, bound: false, canEditProfile: true })
     }
-  },
-
-  _maskPhone(phone) {
-    if (!phone) return ''
-    return phone.length === 11 ? phone.slice(0, 3) + '****' + phone.slice(7) : phone
   },
 
   onFormInput(e) {
@@ -173,6 +173,11 @@ Page({
     const { bankName, cardNo, cardHolder } = this.data.bank
     if (!bankName || !cardNo || !cardHolder) {
       wx.showToast({ title: '请填写完整开户行/卡号/持卡人', icon: 'none' })
+      return
+    }
+    // 国内银行卡号 16~19 位数字（借记卡多为 16/17/19 位，信用卡 16 位）
+    if (!/^\d{16,19}$/.test(cardNo)) {
+      wx.showToast({ title: '银行卡号应为 16~19 位数字', icon: 'none' })
       return
     }
     if (!this.data.agreedBank) {

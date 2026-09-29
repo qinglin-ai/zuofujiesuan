@@ -15,7 +15,7 @@
         <image wx:if="{{avatarUrl}}" class="avatar" src="{{avatarUrl}}" mode="aspectFill" />
         <view wx:else class="avatar avatar-empty">{{avatarChar}}</view>
         <view class="avatar-side">
-          <view class="avatar-name">{{user.nickname || user.real_name || '未设置昵称'}}</view>
+          <view class="avatar-name">{{avatarName}}</view>
           <button class="mini-btn" open-type="chooseAvatar" bindchooseavatar="onChooseAvatar">设置头像</button>
         </view>
         <view class="tag tag-{{user.approval_status}}">{{approvalText}}</view>
@@ -29,7 +29,7 @@
         </view>
         <view class="kv">
           <view class="kv-label">真实姓名</view>
-          <view class="kv-value">{{user.real_name}}</view>
+          <view class="kv-value">{{maskName}}</view>
         </view>
         <view class="kv">
           <view class="kv-label">昵称</view>
@@ -67,7 +67,7 @@
       <block wx:else>
         <view class="form-tip">开户行、银行卡号、持卡人姓名仅用于向你支付兼职佣金，请确保持卡人与实名信息一致</view>
         <input class="ipt" placeholder="开户行" value="{{bank.bankName}}" bindinput="onBankInput" data-key="bankName" />
-        <input class="ipt" type="number" placeholder="银行卡号" value="{{bank.cardNo}}" bindinput="onBankInput" data-key="cardNo" />
+        <input class="ipt" type="number" maxlength="19" placeholder="银行卡号（16~19 位）" value="{{bank.cardNo}}" bindinput="onBankInput" data-key="cardNo" />
         <input class="ipt" placeholder="持卡人姓名" value="{{bank.cardHolder}}" bindinput="onBankInput" data-key="cardHolder" />
         <view class="agree-row" bindtap="toggleAgreeBank">
           <view class="checkbox {{agreedBank ? 'on' : ''}}">{{agreedBank ? '✓' : ''}}</view>

@@ -1,5 +1,6 @@
 const request = require('../../utils/request')
 const tokenManager = require('../../utils/token')
+const { maskName } = require('../../utils/mask')
 
 const WD_STATUS = { pending: '转账中', paid: '已到账', rejected: '已拒绝' }
 const WD_TRANSFER_TEXT = {
@@ -43,7 +44,7 @@ Page({
       const commissions = await request.get('/api/wallet/commissions')
       const wds = await request.get('/api/wallet/withdrawals')
       const bank_tail = info.bank_info && info.bank_info.cardNo
-        ? `${info.bank_info.bankName || ''} ···${String(info.bank_info.cardNo).slice(-4)}（${info.bank_info.cardHolder || ''}）`
+        ? `${info.bank_info.bankName || ''} ···${String(info.bank_info.cardNo).slice(-4)}（${maskName(info.bank_info.cardHolder)}）`
         : ''
       const withdrawals = wds.map((w) => {
         let status_text = WD_STATUS[w.status] || w.status
