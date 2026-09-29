@@ -1,7 +1,8 @@
 # 前后端分离部署编排：MySQL + 后端服务
-# 启动时 MySQL 首次将以空数据卷初始化，自动创建 zuofu_parttime 库并执行 migrations/*.sql 建表脚本。
+# 启动时 MySQL 首次将以空数据目录初始化，自动创建 zuofu_parttime 库并执行 migrations/*.sql 建表脚本。
 # 用法：docker compose up -d --build   （环境变量来自根目录 .env，参考 .env.example）
-# 首次启动若需重置数据库，可删除 mysql_data 卷后重启（仅测试环境）。
+# 数据库数据落在宿主 /data/zuofujiesuan/mysql（首次需先建目录并 chown 999:999）。
+# 首次启动若需重置数据库，可停止容器后清空该目录再重启（仅测试环境）。
 
 services:
   mysql:
@@ -18,7 +19,8 @@ services:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
     volumes:
-      - mysql_data:/var/lib/mysql
+      # 数据目录绑定到宿主路径，便于备份、迁移与直接排查；容器内 MySQL 用户 uid=999，首次需 chown 999:999
+      - /data/zuofujiesuan/mysql:/var/lib/mysql
       # 首启自动执行建表脚本（含全部唯一约束/索引）
       - ./backend/migrations:/docker-entrypoint-initdb.d:ro
     # 不向宿主机发布 3306：后端通过 compose 网络（mysql:3306）访问即可，
@@ -67,6 +69,3 @@ services:
       # 仅绑定本机回环，供宿主 Nginx 反向代理使用（容器内仍为 5000）。
       # 用 5800 而非 5000：本机已存在其他项目占用 0.0.0.0:5000，0.0.0.0 绑定会覆盖回环地址导致冲突。
       - "127.0.0.1:5800:5000"
-
-volumes:
-  mysql_data:
