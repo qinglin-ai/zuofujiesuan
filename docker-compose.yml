@@ -28,7 +28,7 @@ services:
     # 需要图形工具连接时，用 SSH 隧道到本机后临时改为 "127.0.0.1:3306:3306"。
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
-      interval: 15s
+      interval: 5s
       timeout: 3s
       retries: 20
 
@@ -66,6 +66,9 @@ services:
     volumes:
       - ./backend/certs:/app/certs:ro
     ports:
-      # 仅绑定本机回环，供宿主 Nginx 反向代理使用（容器内仍为 5000）。
-      # 用 5800 而非 5000：本机已存在其他项目占用 0.0.0.0:5000，0.0.0.0 绑定会覆盖回环地址导致冲突。
-      - "127.0.0.1:5800:5000"
+      # 443 上的 Nginx 跑在容器里（多项目共存的常见形态），其 vhost 通过
+      # http://host.docker.internal:5001 访问后端。host.docker.internal 指向宿主的 docker 网关
+      # 地址（默认 172.17.0.1，以该容器内 /etc/hosts 为准），所以这里不能绑 127.0.0.1——
+      # 容器内的 127.0.0.1 是容器自身，绑回环必然 502。宿主端口用 5001 与既有 vhost 对齐。
+      # 查看实际解析：docker exec <nginx容器名> sh -c 'grep host.docker.internal /etc/hosts'
+      - "172.17.0.1:5001:5000"

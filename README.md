@@ -48,9 +48,9 @@ docker compose up -d --build
 
 服务地址：
 
-- 后端 API：`http://<host>:5800`（Docker 编排将宿主回环 5800 映射到容器内 5000）
-- 健康检查：`http://<host>:5800/api/health/ping`、`/api/health/db`
-- 管理后台：`http://<host>:5800/admin`
+- 后端 API：`http://172.17.0.1:5001`（Docker 编排映射；容器内 Nginx 经 `host.docker.internal:5001` 访问，端口与 vhost 对齐）
+- 健康检查：`http://172.17.0.1:5001/api/health/ping`、`/api/health/db`
+- 管理后台：`http://172.17.0.1:5001/admin`
 
 > **⚠️ 已有数据卷时的注意事项**：`docker-entrypoint-initdb.d` 仅在新数据卷**首次启动**时执行一次。若后端更新后会新增 migration，需手动对运行中的 MySQL 补执行，否则数据库缺少新列会导致接口报 `1054 Unknown column`。手动补迁移示例：
 >
