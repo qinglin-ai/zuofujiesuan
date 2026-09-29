@@ -21,8 +21,9 @@ services:
       - mysql_data:/var/lib/mysql
       # 首启自动执行建表脚本（含全部唯一约束/索引）
       - ./backend/migrations:/docker-entrypoint-initdb.d:ro
-    ports:
-      - "3306:3306"
+    # 不向宿主机发布 3306：后端通过 compose 网络（mysql:3306）访问即可，
+    # 既满足安全规范（数据库不对外），也避免与宿主机/旧容器上的 MySQL 端口冲突。
+    # 需要图形工具连接时，用 SSH 隧道到本机后临时改为 "127.0.0.1:3306:3306"。
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 15s
@@ -63,7 +64,8 @@ services:
     volumes:
       - ./backend/certs:/app/certs:ro
     ports:
-      - "5000:5000"
+      # 仅绑定本机，供宿主 Nginx 反向代理（443 -> 127.0.0.1:5000）使用
+      - "127.0.0.1:5000:5000"
 
 volumes:
   mysql_data:

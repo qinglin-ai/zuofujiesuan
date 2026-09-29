@@ -3,3 +3,6 @@ certs/
 __pycache__/
 *.pyc
 tests/
+.venv/
+logs/
+.venv*/
