@@ -26,7 +26,9 @@ weixinapp/
 │   │   ├── auth/         # JWT 鉴权、微信 code→openid
 │   │   ├── cli.py        # Flask CLI（seed-admin）
 │   │   └── __init__.py   # 应用工厂
-│   ├── migrations/       # 建表脚本（001_init / 002_admin_auth / 003_wxpay_withdrawal / 004_withdrawal_cancel_refund）
+│   ├── migrations/       # 迁移脚本（001_init / 002_admin_auth / 003_wxpay_withdrawal / 004_withdrawal_cancel_refund / 005_users_profile_nullable）
+│   ├── certs/            # 微信支付证书（不入库，仅 .gitkeep 占位）
+│   ├── uploads/          # 用户上传文件（头像，不入库，仅 .gitkeep 占位；容器内挂载为 /app/uploads）
 │   ├── requirements.txt
 │   └── wsgi.py           # 本地入口：python wsgi.py
 ├── miniprogram/          # 兼职端原生小程序（app.json/tabBar + pages/）
@@ -55,7 +57,7 @@ docker compose up -d --build
 - 健康检查：`http://172.18.0.1:5001/api/health/ping`、`/api/health/db`
 - 管理后台：`http://172.18.0.1:5001/admin`
 
-> **⚠️ 端口与反代对齐（本机多项目共存）**：宿主 `5000` 已被其他项目占用（`audio_server`），故本项目后端宿主端口用 `5001`。`443` 上的 Nginx 跑在既有容器 `aiscan-frontend` 内，其 `host.docker.internal` 在本服务器上**实际解析为 `172.18.0.1`**（不是默认的 172.17.0.1），所以 `docker-compose.yml` 把后端绑定到 `172.18.0.1:5001`——宿主端口与既有 vhost 上游端口一致，**Nginx 侧无需改动**。
+> **⚠️ 端口与反代对齐（本机多项目共存）**：宿主 `5000` 已被其他项目占用（`audio_server`），故本项目后端宿主端口用 `5001`。`443` 上的 Nginx 跑在既有容器 `aiscan-frontend` 内，其 `host.docker.internal` 在本服务器上**实际解析为 `172.18.0.1`**（不是默认的 172.17.0.1），所以 `docker-compose.yml` 把后端绑定到 `172.18.0.1:5001`——宿主端口与既有 vhost 上游端口一致，**Nginx 侧无需改动**。**该方案已在本服务器实测验证通过**（公网 `https://jiesuan.zuofu.info/api/health/db` 可达且 DB ok，Nginx 零改动）。
 >
 > 绑定地址**不能写 `127.0.0.1`**（该回环在 Nginx 容器内指容器自身，必然 502），也**不能写 `0.0.0.0:5000`**（端口被占）。部署前用下面命令核对实际值，再决定绑定 IP：
 >
@@ -115,12 +117,15 @@ flask --app app seed-admin --account 手机号或姓名 --password 你的密码
 
 ## 文档索引
 
-详细设计与进度见 `docs/`：
+详细设计与进度见 `docs/`（2026-09-29 已整合为 8 份）：
 
-- `系统架构与开发规划.md` — 七阶段规划与架构
-- `需求清单.md` / `数据库结构说明.md` / `业务逻辑说明.md` / `技术机制预研.md` / `原型与UI设计.md`
-- `开发任务拆解表.md` — 任务级拆解与工时
-- `项目进度与文档导航.md` — 阶段进度与导航（当前：阶段一~五完成 ✅；阶段四 T4-6 微信自动打款已编码实现，待真实商户凭据实机联调）
+- `业务说明.md` — 角色与需求范围 + 任务流程与状态机 + 业务规则与资金口径
+- `数据库结构说明.md` — 全部表/字段/索引/ER/权限（数据侧唯一真相）
+- `系统设计与实现.md` — 架构与七阶段规划 + 关键机制实现 + 原型与UI + 任务拆解表
+- `部署与上线指南.md` — 域名备案/服务器/SSL/Nginx/Docker 部署/支付配置/验收排障 + 审核整改提审
+- `微信支付集成与联调方案.md` — 商家转账自动打款集成方案 + 实机联调测试方案
+- `过程文档归档.md` — 阶段一过程文档（复核/评审/冻结/修复方案，历史快照）
+- `项目进度与文档导航.md` — 阶段进度与文档导航（当前：阶段一~五完成 ✅；阶段四 T4-6 微信自动打款已编码实现，待真实商户凭据实机联调）
 - `文档变更记录.md` — 变更登记
 
 ## 技术要点
