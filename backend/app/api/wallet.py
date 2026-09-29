@@ -1,6 +1,6 @@
 """资金链路接口（阶段四 T4-1~T4-5 + 微信自动打款）。
 
-资金安全要点，全部遵循《技术机制预研.md》：
+资金安全要点，全部遵循《系统设计与实现.md》「技术机制预研」：
 - T4-1 佣金入账：佣金写 commissions + 余额加 balances.available_balance，同一事务内完成；
   commissions.assignment_id 唯一索引保证幂等（即使并发重复触发也只入账一次）。
 - T4-2 提现申请：校验 amount <= available_balance、已绑卡（含协议授权）且未超每日申请次数上限，

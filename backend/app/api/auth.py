@@ -1,5 +1,5 @@
 """注册/登录鉴权接口。(注册审批完整逻辑在阶段三实现，此处仅打通登录链路)"""
-from flask import Blueprint, request
+from flask import Blueprint, g, request
 from sqlalchemy import or_
 from werkzeug.security import check_password_hash
 
@@ -16,10 +16,12 @@ def _default_user(openid):
         db.select(User).where(User.openid == openid)
     ).scalar_one_or_none()
     if not user:
+        # 登录即建档占位：手机号/真实姓名待用户在「用户」页绑定后再写入。
+        # 未绑定写 NULL 而非空串——users.phone 有唯一索引，空串会与下一个新用户冲突。
         user = User(
             openid=openid,
-            phone="",
-            real_name="",
+            phone=None,
+            real_name=None,
             role="worker",
             approval_status="pending",
             status="active",
@@ -106,13 +108,7 @@ def admin_login():
 @bp.get("/me")
 @login_required
 def me():
-    from flask import g
-    return {
-        "code": 0,
-        "data": {
-            "openid": g.user.openid,
-            "role": g.user.role,
-            "approval_status": g.user.approval_status,
-            "status": g.user.status,
-        },
-    }
+    """当前登录用户的完整资料（用户页展示/信息绑定回显用）。"""
+    from .users import _public_user
+
+    return {"code": 0, "data": _public_user(g.user)}

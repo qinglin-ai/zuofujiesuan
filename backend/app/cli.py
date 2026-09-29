@@ -11,7 +11,7 @@ def register_commands(app):
     @app.cli.command("seed-admin")
     @click.option(
         "--account",
-        prompt="管理员账号(手机号/真实姓名)",
+        prompt="管理员账号(手机号/真实姓名/openid)",
         default="",
         help="将该用户设为 admin",
     )
@@ -23,15 +23,26 @@ def register_commands(app):
         help="登录密码",
     )
     def seed_admin(account, password):
-        """将已建档用户设为 admin 并设置登录密码（T5-1 引导用）。"""
+        """将已建档用户设为 admin 并设置登录密码（T5-1 引导用）。
+
+        登录建档时 phone/real_name 为 NULL（待用户在「用户」页绑定），此时只能用 openid 匹配。
+        """
         account = (account or "").strip()
         user = db.session.execute(
             db.select(User).where(
-                or_(User.phone == account, User.real_name == account)
+                or_(
+                    User.phone == account,
+                    User.real_name == account,
+                    User.openid == account,
+                )
             )
         ).scalar_one_or_none()
         if not user:
-            click.echo("未找到该用户，请先用微信小程序登录建档后再执行 seed-admin")
+            click.echo(
+                "未找到该用户；请先用微信小程序登录建档。"
+                "若尚未绑定手机号/真实姓名，请改用 openid："
+                "flask seed-admin --account <openid> --password <密码>"
+            )
             return
         user.role = "admin"
         user.password_hash = generate_password_hash(password)

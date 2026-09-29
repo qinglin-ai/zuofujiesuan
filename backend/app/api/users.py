@@ -3,7 +3,12 @@
 worker 补充完善注册资料后进入待审批；admin 对待审批用户执行通过/驳回。
 审批/封禁独立：审批通过后才可接单，封禁期间无法领取/提交任务。
 """
-from flask import Blueprint, g, request
+import hashlib
+import os
+import re
+import time
+
+from flask import Blueprint, current_app, g, request
 from sqlalchemy import or_
 from sqlalchemy.exc import IntegrityError
 
@@ -12,6 +17,10 @@ from ..extensions import db
 from ..models import User
 
 bp = Blueprint("users", __name__)
+
+PHONE_RE = re.compile(r"^1[3-9]\d{9}$")
+AVATAR_EXTS = {"png", "jpg", "jpeg", "webp"}
+AVATAR_MAX_BYTES = 2 * 1024 * 1024
 
 
 def _public_user(user):
@@ -39,6 +48,8 @@ def register():
     real_name = (body.get("real_name") or "").strip()
     if not phone or not real_name:
         return {"code": 400, "message": "手机号与真实姓名必填"}, 400
+    if not PHONE_RE.match(phone):
+        return {"code": 400, "message": "手机号格式不正确"}, 400
 
     user = g.user
     if user.approval_status == "approved":
@@ -66,6 +77,38 @@ def register():
         db.session.rollback()
         return {"code": 409, "message": "手机号已注册"}, 409
     return {"code": 0, "data": _public_user(user)}
+
+
+@bp.post("/avatar")
+@login_required
+def upload_avatar():
+    """上传本人头像（multipart，字段名 file），落盘后写回 user.avatar。
+
+    微信 chooseAvatar 返回的是本地临时路径，无法直接入库，须先上传到服务端。
+    """
+    file = request.files.get("file")
+    if not file or not file.filename:
+        return {"code": 400, "message": "缺少文件"}, 400
+    ext = file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else ""
+    if ext not in AVATAR_EXTS:
+        return {"code": 400, "message": "仅支持 png/jpg/jpeg/webp 图片"}, 400
+    # 先用 content_length 拦一道，避免超大文件整体读入内存
+    if (request.content_length or 0) > AVATAR_MAX_BYTES + 64 * 1024:
+        return {"code": 400, "message": "图片不能超过 2MB"}, 400
+    blob = file.read()
+    if len(blob) > AVATAR_MAX_BYTES:
+        return {"code": 400, "message": "图片不能超过 2MB"}, 400
+
+    digest = hashlib.sha1(g.user.openid.encode("utf-8")).hexdigest()[:12]
+    name = f"{digest}_{int(time.time())}.{ext}"
+    target_dir = os.path.join(current_app.config["UPLOAD_ROOT"], "avatars")
+    os.makedirs(target_dir, exist_ok=True)
+    with open(os.path.join(target_dir, name), "wb") as fh:
+        fh.write(blob)
+
+    g.user.avatar = f"/api/uploads/avatars/{name}"
+    db.session.commit()
+    return {"code": 0, "data": {"avatar": g.user.avatar}}
 
 
 @bp.get("/pending")

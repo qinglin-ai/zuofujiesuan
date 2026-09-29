@@ -18,8 +18,8 @@ class User(TimestampMixin, db.Model):
 
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     openid = db.Column(db.String(64), nullable=False)
-    phone = db.Column(db.String(20), nullable=False)
-    real_name = db.Column(db.String(50), nullable=False)
+    phone = db.Column(db.String(20))  # 手机号，唯一；未绑定为 NULL（NULL 不占用唯一索引）
+    real_name = db.Column(db.String(50))  # 真实姓名；未绑定为 NULL
     avatar = db.Column(db.String(255))
     nickname = db.Column(db.String(50))
     role = db.Column(db.Enum("worker", "admin"), nullable=False, default="worker")

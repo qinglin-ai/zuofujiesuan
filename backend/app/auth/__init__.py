@@ -43,7 +43,7 @@ def login_required(fn):
             payload = decode_token(token)
         except PyJWTError:
             return {"code": 401, "message": "登录已失效"}, 401
-        user = db.session.get(User, None) or db.session.execute(
+        user = db.session.execute(
             db.select(User).where(User.openid == payload["sub"])
         ).scalar_one_or_none()
         if not user or user.status != "active":
