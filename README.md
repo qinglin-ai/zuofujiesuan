@@ -26,7 +26,7 @@ weixinapp/
 │   │   ├── auth/         # JWT 鉴权、微信 code→openid
 │   │   ├── cli.py        # Flask CLI（seed-admin）
 │   │   └── __init__.py   # 应用工厂
-│   ├── migrations/       # 建表脚本（001_init.sql、002_admin_auth.sql）
+│   ├── migrations/       # 建表脚本（001_init / 002_admin_auth / 003_wxpay_withdrawal / 004_withdrawal_cancel_refund）
 │   ├── requirements.txt
 │   └── wsgi.py           # 本地入口：python wsgi.py
 ├── miniprogram/          # 兼职端原生小程序（app.json/tabBar + pages/）
@@ -42,17 +42,28 @@ weixinapp/
 cp .env.example .env
 #    编辑 .env：填写 MYSQL_ROOT_PASSWORD / MYSQL_APP_PASSWORD / JWT_SECRET / WX_APPID / WX_SECRET
 
-# 2) 启动（MySQL 首启自动建库建表，执行 backend/migrations/*.sql）
+# 2) 准备 MySQL 宿主数据目录（容器内 mysql 用户 uid=999，权限不对会启动失败）
+mkdir -p /data/zuofujiesuan/mysql && chown -R 999:999 /data/zuofujiesuan/mysql
+
+# 3) 启动（MySQL 首启自动建库建表，执行 backend/migrations/*.sql）
 docker compose up -d --build
 ```
 
-服务地址：
+服务地址（后端容器绑定在 docker 网关 IP 上，供容器内的 Nginx 经 `host.docker.internal` 反代访问）：
 
-- 后端 API：`http://172.17.0.1:5001`（Docker 编排映射；容器内 Nginx 经 `host.docker.internal:5001` 访问，端口与 vhost 对齐）
-- 健康检查：`http://172.17.0.1:5001/api/health/ping`、`/api/health/db`
-- 管理后台：`http://172.17.0.1:5001/admin`
+- 后端 API：`http://172.18.0.1:5001`
+- 健康检查：`http://172.18.0.1:5001/api/health/ping`、`/api/health/db`
+- 管理后台：`http://172.18.0.1:5001/admin`
 
-> **⚠️ 已有数据卷时的注意事项**：`docker-entrypoint-initdb.d` 仅在新数据卷**首次启动**时执行一次。若后端更新后会新增 migration，需手动对运行中的 MySQL 补执行，否则数据库缺少新列会导致接口报 `1054 Unknown column`。手动补迁移示例：
+> **⚠️ 端口与反代对齐（本机多项目共存）**：宿主 `5000` 已被其他项目占用（`audio_server`），故本项目后端宿主端口用 `5001`。`443` 上的 Nginx 跑在既有容器 `aiscan-frontend` 内，其 `host.docker.internal` 在本服务器上**实际解析为 `172.18.0.1`**（不是默认的 172.17.0.1），所以 `docker-compose.yml` 把后端绑定到 `172.18.0.1:5001`——宿主端口与既有 vhost 上游端口一致，**Nginx 侧无需改动**。
+>
+> 绑定地址**不能写 `127.0.0.1`**（该回环在 Nginx 容器内指容器自身，必然 502），也**不能写 `0.0.0.0:5000`**（端口被占）。部署前用下面命令核对实际值，再决定绑定 IP：
+>
+> ```bash
+> docker exec aiscan-frontend getent hosts host.docker.internal   # 输出的 IP 即应绑定的地址
+> ```
+
+> **⚠️ 已有数据目录时的注意事项**：`docker-entrypoint-initdb.d` 仅在数据目录为空、**首次初始化**时执行一次。若后端更新后会新增 migration，需手动对运行中的 MySQL 补执行，否则数据库缺少新列会导致接口报 `1054 Unknown column`。手动补迁移示例：
 >
 > ```bash
 > docker compose exec -T mysql sh -c 'mysql -uroot -p"$MYSQL_ROOT_PASSWORD" < /docker-entrypoint-initdb.d/002_admin_auth.sql'

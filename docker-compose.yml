@@ -66,9 +66,7 @@ services:
     volumes:
       - ./backend/certs:/app/certs:ro
     ports:
-      # 443 上的 Nginx 跑在容器里（多项目共存的常见形态），其 vhost 通过
-      # http://host.docker.internal:5001 访问后端。host.docker.internal 指向宿主的 docker 网关
-      # 地址（默认 172.17.0.1，以该容器内 /etc/hosts 为准），所以这里不能绑 127.0.0.1——
-      # 容器内的 127.0.0.1 是容器自身，绑回环必然 502。宿主端口用 5001 与既有 vhost 对齐。
-      # 查看实际解析：docker exec <nginx容器名> sh -c 'grep host.docker.internal /etc/hosts'
-      - "172.17.0.1:5001:5000"
+      # 绑定到 docker0 网关 IP（172.18.0.1:5001->容器 5000）。
+      # aiscan-frontend 里的 host.docker.internal 实际解析到 172.18.0.1，nginx 通过它转发访问；
+      # 该 IP 为内网桥地址，不对外暴露，也避免了 0.0.0.0:5000（已被 audio_server 占用）。
+      - "172.18.0.1:5001:5000"
